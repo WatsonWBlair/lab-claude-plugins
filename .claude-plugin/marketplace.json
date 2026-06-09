@@ -1,0 +1,20 @@
+{
+  "name": "lab-claude-plugins",
+  "owner": {
+    "name": "Watson Blair",
+    "email": "watsonwblair@gmail.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins from the CAMELS Research Group lab.",
+    "version": "1.0.0"
+  },
+  "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
+  "plugins": [
+    {
+      "name": "pr-review-loop",
+      "source": "./plugins/pr-review-loop",
+      "description": "Drive a PR through review-remediate cycles until a 0-Blockers merge bar is met.",
+      "version": "1.0.0"
+    }
+  ]
+}

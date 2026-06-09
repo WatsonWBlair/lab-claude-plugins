@@ -1,0 +1,8 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+
+# Local Claude Code session state (if this repo is ever opened as a workspace)
+.claude/.pr-review-loop.state.json
+.claude/ralph-loop.local.md

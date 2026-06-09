@@ -1,0 +1,3 @@
+# Normalize line endings. Shell scripts MUST stay LF so they run under POSIX bash.
+* text=auto
+*.sh text eol=lf

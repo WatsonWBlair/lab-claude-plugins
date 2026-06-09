@@ -14,7 +14,7 @@
       "name": "pr-review-loop",
       "source": "./plugins/pr-review-loop",
       "description": "Drive a PR through review-remediate cycles until a 0-Blockers merge bar is met.",
-      "version": "1.0.0"
+      "version": "1.0.1"
     }
   ]
 }

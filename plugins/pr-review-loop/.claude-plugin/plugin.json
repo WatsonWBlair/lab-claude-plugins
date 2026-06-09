@@ -1,9 +1,9 @@
 {
   "name": "pr-review-loop",
   "description": "Drive a PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then run a close-out sub-flow that resolves Important findings, folds easy Suggestions, files issues for the rest, and posts one consolidated PR comment.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Watson Blair"
   },
-  "dependencies": ["ralph-loop"]
+  "dependencies": ["ralph-loop@claude-plugins-official"]
 }

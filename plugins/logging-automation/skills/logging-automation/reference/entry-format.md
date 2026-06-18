@@ -28,7 +28,9 @@ Field rules:
 - `Supersedes:` — present only on entries that replace an earlier entry. Format the value as
   the earlier header's date+subject verbatim (e.g. `2026-03-01 09:00 — chose sqlite over
   postgres`). The same PR that adds this entry removes the superseded line from the
-  Standing Decisions index.
+  Standing Decisions index. Full supersession procedure — including immutability, the
+  factual-fix `log-lint:override` path, and what the skill refuses — is in
+  `supersession.md`.
 - `Refs:` — PR# is the durable ref at project/lab altitude. Never use a squash SHA. At lab
   altitude (no CI), use absolute paths or URLs instead of PR#.
 - No `Status:` field. Currency is tracked in the Standing Decisions index, not in entries.
@@ -138,5 +140,5 @@ This skill surfaces the cap warning as context. Authoring the archive PR is out 
 
 Entries are immutable once their PR merges. Revision = new entry with `Supersedes:`; never
 edit the old entry. Factual fixes (e.g. typo'd PR#) require a PR with a `log-lint:override`
-label and the reason in the PR body — never a silent edit. Full supersession detail is covered
-in the companion reference file for that topic (Task 9).
+label and the reason in the PR body — never a silent edit. Full supersession procedure and
+immutability rules are in `supersession.md`.

@@ -7,12 +7,14 @@ A [Claude Code](https://code.claude.com) plugin marketplace from the CAMELS Rese
 | Plugin | What it does |
 |---|---|
 | **pr-review-loop** | Drives a GitHub PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then runs a close-out sub-flow (resolve Important findings, fold easy Suggestions, file issues for the rest, post one consolidated PR comment). |
+| **logging-automation** | Detects loggable moments and drafts correctly-routed, correctly-formatted audit-trail log entries by *applying* `lab-os .claude/rules/03-logging.md` (source of truth) — it does not redefine the rules. Load-bearing-decision writes are gated behind human approval. |
 
 ## Install
 
 ```
 /plugin marketplace add WatsonWBlair/lab-claude-plugins
 /plugin install pr-review-loop@lab-claude-plugins
+/plugin install logging-automation@lab-claude-plugins
 ```
 
 ### Dependency: `ralph-loop`

@@ -9,7 +9,7 @@ description: Use when a load-bearing decision is reached mid-session (real alter
 
 ## Overview
 
-This skill turns a loggable moment into a correctly-routed, correctly-formatted log entry. It classifies the event against the three altitude tiers (lab / project / plan-execution), selects the owning log file, drafts an entry in the canonical format, and gates the write behind human approval before committing anything to disk.
+This skill turns a loggable moment into a correctly-routed, correctly-formatted log entry. It classifies the event against the three altitude tiers (lab / project / plan-execution), selects the owning log file, drafts an entry in the canonical format, and applies a two-tier write contract: status facts and irreversible/external events may be applied without a gate; load-bearing decisions and direction changes are held as drafts and **never written to an immutable project/lab log until the human explicitly approves the drafted text** — no autonomy mode bypasses this. See `write-tiers.md` for the full contract.
 
 Source of truth for all rules this skill applies: `lab-os/.claude/rules/03-logging.md`.
 
@@ -39,3 +39,4 @@ These cases belong elsewhere — do not fire this skill for them:
 - [`${CLAUDE_PLUGIN_ROOT}/skills/logging-automation/reference/altitude-routing.md`](reference/altitude-routing.md) — lab vs project vs plan-execution routing rules and owning file paths
 - [`${CLAUDE_PLUGIN_ROOT}/skills/logging-automation/reference/entry-format.md`](reference/entry-format.md) — canonical entry template, field rules, byte budget, immutability constraints
 - [`${CLAUDE_PLUGIN_ROOT}/skills/logging-automation/reference/examples.md`](reference/examples.md) — worked examples of correctly-routed, correctly-formatted entries across all three altitudes
+- [`${CLAUDE_PLUGIN_ROOT}/skills/logging-automation/reference/write-tiers.md`](reference/write-tiers.md) — two-tier write contract: status/event auto-draft vs load-bearing-decision/direction-change gate; draft presentation requirements; hard approval-gate invariant

@@ -1,0 +1,8 @@
+{
+  "name": "prompt-optimization",
+  "description": "Optimize any prompt in two modes — augment (add context-appropriate hardening clauses from a curatable library) or rewrite (full AI-ready restructure with goal, success criterion, scope, and output contract) — exposed as both /optimize-prompt and an auto-triggering skill.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Watson Blair"
+  }
+}

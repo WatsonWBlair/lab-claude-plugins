@@ -8,6 +8,7 @@ A [Claude Code](https://code.claude.com) plugin marketplace from the CAMELS Rese
 |---|---|
 | **pr-review-loop** | Drives a GitHub PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then runs a close-out sub-flow (resolve Important findings, fold easy Suggestions, file issues for the rest, post one consolidated PR comment). |
 | **logging-automation** | Detects loggable moments and drafts correctly-routed, correctly-formatted audit-trail log entries by *applying* `lab-os .claude/rules/03-logging.md` (source of truth) — it does not redefine the rules. Load-bearing-decision writes are gated behind human approval. **First designated consumer: mission-control Phase 6** (`log:` capture flow) — MC Phase 6 is designed to consume this skill's routing, format, and gate logic; MC retains its own approve-UI, `log_entries` store, file-append, and divergence tripwire. Consumer contract: `plugins/logging-automation/skills/logging-automation/reference/consumer-contract.md`. |
+| **prompt-optimization** | Hardens or restructures a prompt in two modes — **augment** (adds context-appropriate hardening clauses from a curatable library while preserving your original wording) or **rewrite** (produces a full AI-ready restructure with an explicit goal, success criterion, scope boundary, and output contract). Available as both a slash command (`/optimize-prompt`) and an auto-triggering skill. No loop-framework dependency. |
 
 ## Install
 
@@ -15,6 +16,7 @@ A [Claude Code](https://code.claude.com) plugin marketplace from the CAMELS Rese
 /plugin marketplace add WatsonWBlair/lab-claude-plugins
 /plugin install pr-review-loop@lab-claude-plugins
 /plugin install logging-automation@lab-claude-plugins
+/plugin install prompt-optimization@lab-claude-plugins
 ```
 
 ### Dependency: `ralph-loop`
@@ -60,11 +62,31 @@ Capture a loggable moment as a correctly-routed, correctly-formatted log-entry d
 
 It is **draft-only**: load-bearing decisions and direction changes are held for your explicit approval, and the skill never writes, commits, or posts on its own. It can also fire automatically when a session reaches a loggable moment. See the plugin's `SKILL.md` and `consumer-contract.md` for the full classification, routing, and gate model.
 
+### prompt-optimization
+
+```
+/optimize-prompt [--augment | --rewrite] <prompt text>
+```
+
+Pass your prompt as the argument, or invoke with no argument to optimize the most recent user message in the conversation.
+
+- `--augment` — adds hardening clauses from the curatable boilerplate library to your original prompt; preserves your wording; names every clause it added and why
+- `--rewrite` — restructures the prompt from scratch with an explicit goal, success criterion, scope boundary, and output contract; interviews you with bounded clarifying questions if the prompt is too ambiguous to rewrite safely
+- _(no flag)_ — mode is inferred from your request; defaults to **augment** when intent is genuinely ~50/50 (least disruptive)
+
+The skill also fires automatically when you describe a prompt as vague, incomplete, or missing guardrails, or ask to make a prompt "model-ready" — no explicit command needed.
+
+**Augment output:** your original prompt, unchanged, followed by a labeled `## Augmentation` block listing what was added and why.
+**Rewrite output:** the optimized prompt as a standalone block, followed by a labeled rationale for the structural changes.
+
+This plugin has **no loop-framework dependency** — the rewrite interview is a normal conversational turn, not a ralph-style automated loop. Unlike `pr-review-loop`, you do not need `ralph-loop` installed.
+
 ## Requirements
 
 - Claude Code with plugin support
 - **pr-review-loop:** the `ralph-loop` plugin (see above); `gh` CLI, authenticated, with push access to the PR's head branch
 - **logging-automation:** read access to the lab logging rules it applies (`lab-os/.claude/rules/03-logging.md`, source of truth); no network or `gh` dependency
+- **prompt-optimization:** no additional dependencies — no `ralph-loop`, no network access, no `gh` CLI required
 
 ## Contributing / forking
 

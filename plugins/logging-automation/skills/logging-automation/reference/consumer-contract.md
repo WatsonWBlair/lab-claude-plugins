@@ -157,6 +157,12 @@ Phase-6 spec):
 Note: `entry_date` is not unique — multiple entries on the same date are expected. MC sorts by
 `created_at` for stable ordering within a day.
 
+Note: MC's Phase-6 `body_md` column note ("decision / why / alternatives / status") predates the
+no-`Status:` rule in `03-logging.md`. The canonical field set this skill emits is
+**Decision / Why / Alternatives / Refs** — there is no `Status:` line (currency lives in the
+Standing Decisions index, per `entry-format.md` § 1). Do not reintroduce a `Status:` field on the
+MC side when mapping `body_md`.
+
 ### Skill draft → `project_log.md` append shape
 
 The lab canonical append format is:

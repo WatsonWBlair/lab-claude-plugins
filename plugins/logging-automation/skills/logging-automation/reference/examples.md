@@ -196,15 +196,6 @@ index line"). The one-liner above is the exact artifact that would be appended t
 
 ---
 
-## Appending additional samples
-
-Task 10 will add further worked examples. Append new samples after Sample C using the same
-section structure: `## Sample D — <label>` etc., with the five subsections
-(Candidate moment / Classification walkthrough / Altitude routing / Target surface /
-Format shape produced / Write status) in the same order.
-
----
-
 ## Sample D — Load-bearing decision with gate visibly firing (Tier 2 write behavior)
 
 ### Candidate moment
@@ -328,7 +319,7 @@ is the artifact that would be posted to PR #22; no `project_log.md` is touched.
 
 ---
 
-## Sample H — Irreversible/external event auto-drafted to project log (no index line)
+## Sample F — Irreversible/external event auto-drafted to project log (no index line)
 
 ### Candidate moment
 
@@ -379,9 +370,9 @@ a blank line.
 
 ---
 
-## Sample F — Reversal (superseding entry) and contrasting typo-fix via `log-lint:override`
+## Sample G — Reversal (superseding entry) and contrasting typo-fix via `log-lint:override`
 
-### Candidate moment (F-1: reversal)
+### Candidate moment (G-1: reversal)
 
 An earlier decision logged at `2026-03-01 09:00` chose SQLite over LevelDB and flat JSON
 (a hypothetical prior entry — distinct from Sample D's 2026-06-18 entry for illustration).
@@ -454,9 +445,9 @@ part of the same change, not a follow-up.
 
 ---
 
-### Candidate moment (F-2: contrasting typo-fix — NOT a supersession)
+### Candidate moment (G-2: contrasting typo-fix — NOT a supersession)
 
-Suppose the Sample F-1 entry had instead been committed with `#43` in `Refs:` by mistake.
+Suppose the Sample G-1 entry had instead been committed with `#43` in `Refs:` by mistake.
 The `2026-06-18 14:30` entry above has a wrong PR number in its `**Refs:**` line — the squash
 SHA commit was used in error; the correct PR is #44 but `#43` was written. No meaning changed;
 only a factual identifier is wrong.
@@ -490,7 +481,7 @@ fixes — are mutually exclusive and the skill refuses to conflate them.
 
 ---
 
-## Sample G — Lab-altitude entry (Refs are absolute paths/URLs, not PR#)
+## Sample H — Lab-altitude entry (Refs are absolute paths/URLs, not PR#)
 
 ### Candidate moment
 

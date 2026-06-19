@@ -402,6 +402,8 @@ cd "$LAB_CLAUDE_PLUGINS" && grep -qi "mission-control Phase 6\|mission-control p
 
 <!-- entries below — newest at top -->
 
+2026-06-19 00:28 · task 12 · DEFERRAL (recorded choice, not a gap): the lab-altitude project_log.md entry for the P9 / Mission-Control-wiring decision (standalone plugin vs extending pr-review-loop vs MC-internal; MC Phase 6 named first consumer) is deliberately deferred to a consolidation pass once the paired mission-control spec edit ships its own PR. The cross-repo decision is not yet fully consolidated (MC-side edit pending per the 19:39 entry), so writing the lab entry as "done" now would be premature; deferring keeps the lab log honest. Surfaced by pr-review-loop pass-1 outsider review (Important #2).
+
 2026-06-18 19:39 · task 12 · DEVIATION: split for cross-repo halt — README half applied + committed (77432cc; names mission-control Phase 6 first consumer + links consumer-contract.md). The mission-control spec edit was NOT applied: cross-repo / shared-state → halted per the operating contract; exact note text + insertion point handed to Watson. T12's MC-spec verification grep is intentionally unmet pending that human-applied edit.
 
 2026-06-18 19:39 · tasks 1-11 · executed via subagent-driven-development; controller owned all git commits (implementers authored + self-verified, never committed) to keep the shared branch race-free under the wave-2 parallel fan-out (T3/T4/T5); single consolidated reviewer per task (spec-compliance then quality) for these doc-tier tasks. Every task's grep/test/validate gate green; T3, T4, T8, T9, T10, T11 each surfaced one Should-Fix, all remediated + re-verified pre-commit (T4: controller removed an invented dual-write rule the reviewer's proposed remedy would have entrenched).

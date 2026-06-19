@@ -31,6 +31,8 @@ If your version predates plugin dependencies (or the auto-install is blocked), i
 
 ## Usage
 
+### pr-review-loop
+
 ```
 /pr-review-loop <PR#> [--max-iterations 5] [--bar 0-blockers] [--restart]
 ```
@@ -44,12 +46,26 @@ Run it from inside a git repo with an open PR you have push access to. The loop:
 
 Cancel mid-loop with `/cancel-ralph`. See the plugin's `SKILL.md` for the full interrupt model and merge-bar semantics.
 
-### Requirements
+### logging-automation
+
+```
+/log [<repo>] <what happened>
+```
+
+Capture a loggable moment as a correctly-routed, correctly-formatted log-entry draft. With no arguments, it scans the current conversation for the most recent loggable moment and surfaces it for confirmation. The skill:
+
+1. Classifies the moment against the three entry triggers (load-bearing decision / irreversible or external event / direction change), or routes it elsewhere (PR comment, plan execution log, issue, …) when no trigger fires.
+2. Resolves the owning log altitude (lab / project / plan-execution) and the exact target file.
+3. Drafts the entry in the canonical `03-logging.md` format and presents it.
+
+It is **draft-only**: load-bearing decisions and direction changes are held for your explicit approval, and the skill never writes, commits, or posts on its own. It can also fire automatically when a session reaches a loggable moment. See the plugin's `SKILL.md` and `consumer-contract.md` for the full classification, routing, and gate model.
+
+## Requirements
 
 - Claude Code with plugin support
-- `ralph-loop` plugin (see above)
-- `gh` CLI, authenticated, with push access to the PR's head branch
+- **pr-review-loop:** the `ralph-loop` plugin (see above); `gh` CLI, authenticated, with push access to the PR's head branch
+- **logging-automation:** read access to the lab logging rules it applies (`lab-os/.claude/rules/03-logging.md`, source of truth); no network or `gh` dependency
 
 ## Contributing / forking
 
-MIT licensed — see [LICENSE](LICENSE). Fork it, adapt the merge bar, swap the commit trailer for your project's convention. The plugin makes no assumptions about your repo beyond `gh` + a GitHub PR; issue-filing labels (`P0`…`P3`) are applied only if your repo already defines them.
+MIT licensed — see [LICENSE](LICENSE). Fork it and adapt to your project's conventions — for `pr-review-loop`, adjust the merge bar and swap the commit trailer; its issue-filing labels (`P0`…`P3`) are applied only if your repo already defines them. `logging-automation` applies the lab's `03-logging.md` rules, so point it at your own logging standard if you fork it.

@@ -1,0 +1,8 @@
+{
+  "name": "logging-automation",
+  "description": "Detects loggable moments and drafts correctly-routed, correctly-formatted audit-trail log entries by applying the lab logging rules (lab-os `.claude/rules/03-logging.md`); load-bearing-decision writes are gated behind human approval.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Watson Blair"
+  }
+}

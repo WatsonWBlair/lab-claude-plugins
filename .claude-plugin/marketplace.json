@@ -15,6 +15,12 @@
       "source": "./plugins/pr-review-loop",
       "description": "Drive a PR through review-remediate cycles until a 0-Blockers merge bar is met.",
       "version": "1.0.1"
+    },
+    {
+      "name": "logging-automation",
+      "source": "./plugins/logging-automation",
+      "description": "Drafts and routes audit-trail log entries to the correct altitude and format by applying the lab logging rules.",
+      "version": "1.0.0"
     }
   ]
 }

@@ -1,12 +1,12 @@
 # Worked Examples — Dry Classification and Routing
 
-Phase-A integration checkpoint. Three sample moments are walked end-to-end through
+Phase-A integration checkpoint. Sample moments are walked end-to-end through
 classification → altitude → target surface → exact format shape. **No file write is
 performed by any example in this file.** The entries below are drafts only — each is
 held for human approval (write-gated) or routed to a non-log surface.
 
 Source references used throughout: `trigger-classification.md`, `altitude-routing.md`,
-`entry-format.md`.
+`entry-format.md`, `write-tiers.md`, `supersession.md`.
 
 Synthetic date/time used for all headers: **2026-06-18 14:30**. No real content from any
 gated dataset appears. Repo names and paths are fabricated.

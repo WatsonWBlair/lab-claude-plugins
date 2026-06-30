@@ -9,6 +9,7 @@ A [Claude Code](https://code.claude.com) plugin marketplace from the CAMELS Rese
 | **pr-review-loop** | Drives a GitHub PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then runs a close-out sub-flow (resolve Important findings, fold easy Suggestions, file issues for the rest, post one consolidated PR comment). |
 | **logging-automation** | Detects loggable moments and drafts correctly-routed, correctly-formatted audit-trail log entries by *applying* `lab-os .claude/rules/03-logging.md` (source of truth) — it does not redefine the rules. Load-bearing-decision writes are gated behind human approval. **First designated consumer: mission-control Phase 6** (`log:` capture flow) — MC Phase 6 is designed to consume this skill's routing, format, and gate logic; MC retains its own approve-UI, `log_entries` store, file-append, and divergence tripwire. Consumer contract: `plugins/logging-automation/skills/logging-automation/reference/consumer-contract.md`. |
 | **prompt-optimization** | Hardens or restructures a prompt in two modes — **augment** (adds context-appropriate hardening clauses from a curatable library while preserving your original wording) or **rewrite** (produces a full AI-ready restructure with an explicit goal, success criterion, scope boundary, and output contract). Available as both a slash command (`/optimize-prompt`) and an auto-triggering skill. No loop-framework dependency. |
+| **engineering-discipline** | Eight engineering skills adapted from [Matt Pocock's "Skills For Real Engineers"](https://github.com/mattpocock/skills) (MIT). **grill-me**/**grilling** run a relentless one-question-at-a-time alignment interview; **grill-with-docs**/**domain-modeling** run the same interview while maintaining the repo's `GLOSSARY.md` and logging load-bearing decisions; **codebase-design** carries the deep-module vocabulary and **improve-codebase-architecture** scans for deepening opportunities and renders them as a visual HTML report; **diagnosing-bugs** is a feedback-loop-first debugging discipline; **handoff** compacts a conversation for a fresh agent. Rewired to lab-os conventions throughout — decisions route through `/log` (project_log Standing Decisions / spec-log) instead of `docs/adr`, and the domain glossary is `GLOSSARY.md` (first-read, pointed from `CLAUDE.md`) instead of `CONTEXT.md`. Attribution and the full rewire map: `plugins/engineering-discipline/ATTRIBUTION.md`. |
 
 ## Install
 
@@ -17,6 +18,7 @@ A [Claude Code](https://code.claude.com) plugin marketplace from the CAMELS Rese
 /plugin install pr-review-loop@lab-claude-plugins
 /plugin install logging-automation@lab-claude-plugins
 /plugin install prompt-optimization@lab-claude-plugins
+/plugin install engineering-discipline@lab-claude-plugins
 ```
 
 ### Dependency: `ralph-loop`
@@ -81,13 +83,36 @@ The skill also fires automatically when you describe a prompt as vague, incomple
 
 This plugin has **no loop-framework dependency** — the rewrite interview is a normal conversational turn, not a ralph-style automated loop. Unlike `pr-review-loop`, you do not need `ralph-loop` installed.
 
+### engineering-discipline
+
+Eight skills, split by who can invoke them. **User-invoked** (you type them): `/grill-me`, `/grill-with-docs`, `/improve-codebase-architecture`, `/handoff`. **Model-invoked** (auto-fire when the task fits, or you can invoke): `grilling`, `domain-modeling`, `codebase-design`, `diagnosing-bugs`.
+
+```
+/grill-me                          # relentless one-question-at-a-time alignment interview
+/grill-with-docs                   # same interview + maintains GLOSSARY.md + logs decisions via /log
+/improve-codebase-architecture     # scan for deepening opportunities → visual HTML report → grill the pick
+/handoff [what the next session is for]
+```
+
+- **grill-me / grilling** — interviews you down each branch of the decision tree, one question at a time, each with a recommended answer; explores the codebase instead of asking when the answer is in the code. Complements (does not replace) `superpowers:brainstorming` — reach for it to stress-test a near-formed plan.
+- **grill-with-docs / domain-modeling** — the same interview, but stateful: it actively builds the repo's `GLOSSARY.md` (challenge terms, sharpen fuzzy language, stress-test with edge-case scenarios, cross-check against code) and offers to `/log` load-bearing decisions as they crystallize. **Lab-os rewire:** the glossary is a first-read `GLOSSARY.md` pointed from `CLAUDE.md` (not `CONTEXT.md`); decisions route through `/log` to `project_log.md` Standing Decisions (not `docs/adr`). Use it instead of `/grill-me` when the work lives in a repo whose vocabulary is worth pinning down.
+- **codebase-design** — the deep-module vocabulary (module · interface · depth · seam · adapter · leverage · locality) and principles (the deletion test, "the interface is the test surface"). Convention-agnostic; fires automatically when you design or restructure an interface. Includes a design-it-twice parallel sub-agent pattern.
+- **improve-codebase-architecture** — run every few days as upkeep. Surfaces shallow-module friction, renders before/after diagrams to a self-contained HTML file in your OS temp dir (nothing lands in the repo), then grills through the candidate you pick. **Lab-os rewire:** reads `project_log.md` Standing Decisions before suggesting, and on a rejected candidate offers to record the reason via `/log` rather than writing an ADR.
+- **diagnosing-bugs** — feedback-loop-first debugging: build a tight, red-capable repro command before hypothesising. Coexists with `superpowers:systematic-debugging` (kept both deliberately) — pick whichever fits the bug.
+- **handoff** — writes a handoff doc to OS temp (not the workspace) so a fresh agent can continue; redacts secrets, references existing artifacts instead of duplicating them.
+
+Adapted from Matt Pocock's MIT-licensed set; the rewire to lab-os conventions and the exact edits are documented in `plugins/engineering-discipline/ATTRIBUTION.md`.
+
 ## Requirements
 
 - Claude Code with plugin support
 - **pr-review-loop:** the `ralph-loop` plugin (see above); `gh` CLI, authenticated, with push access to the PR's head branch
 - **logging-automation:** read access to the lab logging rules it applies (`lab-os/.claude/rules/03-logging.md`, source of truth); no network or `gh` dependency
 - **prompt-optimization:** no additional dependencies — no `ralph-loop`, no network access, no `gh` CLI required
+- **engineering-discipline:** no `ralph-loop` and no network/`gh` dependency. `improve-codebase-architecture` renders an HTML report that pulls Tailwind + Mermaid from CDNs **when you open the file in a browser** (the agent writes static HTML; nothing fetches at author time). Its `/log` hand-off uses the `logging-automation` plugin if installed, and reads the repo's `project_log.md` and `.claude/rules/` when present — all degrade gracefully when absent
 
 ## Contributing / forking
 
 MIT licensed — see [LICENSE](LICENSE). Fork it and adapt to your project's conventions — for `pr-review-loop`, adjust the merge bar and swap the commit trailer; its issue-filing labels (`P0`…`P3`) are applied only if your repo already defines them. `logging-automation` applies the lab's `03-logging.md` rules, so point it at your own logging standard if you fork it.
+
+`engineering-discipline` vendors skills from [Matt Pocock's "Skills For Real Engineers"](https://github.com/mattpocock/skills) under their MIT license (preserved at `plugins/engineering-discipline/LICENSE`). The lab-os adaptation — what changed and why — is in `plugins/engineering-discipline/ATTRIBUTION.md`.

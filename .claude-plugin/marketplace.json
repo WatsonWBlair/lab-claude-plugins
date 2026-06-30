@@ -27,6 +27,12 @@
       "source": "./plugins/prompt-optimization",
       "description": "Optimize any prompt in two modes — augment (add context-appropriate hardening clauses from a curatable library) or rewrite (full AI-ready restructure with goal, success criterion, scope, and output contract) — exposed as both /optimize-prompt and an auto-triggering skill.",
       "version": "1.0.0"
+    },
+    {
+      "name": "engineering-discipline",
+      "source": "./plugins/engineering-discipline",
+      "description": "Eight engineering-discipline skills adapted from Matt Pocock's 'Skills For Real Engineers' (MIT): grill-me/grilling and grill-with-docs/domain-modeling (relentless alignment interview, the latter also maintaining GLOSSARY.md + logging decisions), codebase-design + improve-codebase-architecture (deep-module design and visual architecture review), diagnosing-bugs (feedback-loop-first debugging), and handoff. Rewired to lab-os conventions — decisions route via /log (project_log Standing Decisions) instead of docs/adr; the domain glossary is GLOSSARY.md instead of CONTEXT.md.",
+      "version": "1.0.0"
     }
   ]
 }

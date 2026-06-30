@@ -1,0 +1,8 @@
+{
+  "name": "engineering-discipline",
+  "description": "Eight engineering-discipline skills adapted from Matt Pocock's 'Skills For Real Engineers' (MIT). grill-me/grilling: a relentless one-question-at-a-time alignment interview. grill-with-docs + domain-modeling: the same interview, plus maintaining the repo's GLOSSARY.md and logging load-bearing decisions as you go. codebase-design + improve-codebase-architecture: deep-module design vocabulary and a visual architecture-review loop. diagnosing-bugs: feedback-loop-first debugging discipline. handoff: compact a conversation for a fresh agent. Rewired to lab-os conventions throughout — decisions route through /log (project_log Standing Decisions / spec-log) instead of docs/adr, and the domain glossary is GLOSSARY.md (first-read, pointed from CLAUDE.md) instead of CONTEXT.md.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Watson Blair"
+  }
+}

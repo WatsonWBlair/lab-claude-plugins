@@ -28,7 +28,16 @@ A [ralph-loop](https://github.com/anthropics/claude-code)-powered cycle that dri
 
 Default is **0 Blockers** — a PR review with no critical items. Important and Suggestions are surfaced for human triage but do not block.
 
+On code-touching PRs the gate counts **effective Blockers** = hard Blockers (`[regression]` findings + untagged Blockers) **plus** any age-0 `[simplification]` finding. A recurring simplification self-demotes out of the gate (see the code-quality rubric below), so the bar stays reachable while still giving each missed simplification one blocking cycle.
+
 Configurable via `--bar` flag (v1 supports `0-blockers` only; stricter bars are deferred).
+
+## Code-quality rubric (code-touching PRs)
+
+Each review pass also applies a structural rubric (`reference/code-quality-rubric.md`, adapted from Cursor's MIT-licensed `thermo-nuclear-code-quality-review`). The subagent tags each structural finding `[regression]` or `[simplification]`; only findings this PR introduces are in scope. Doc/plan-only PRs are unchanged — the rubric is not referenced.
+
+- **`[regression]`** (1000-line crossing in-diff, ad-hoc branch in an unrelated flow, feature logic leaked into a shared path) — a hard Blocker every cycle until fixed.
+- **`[simplification]`** (code-judo smells: thin wrappers, cast/optionality churn, near-duplicate of a canonical helper) — backs off: **Blocker at age 0**, **Important at age 1–2**, **follow-up issue at age ≥ 3 or any terminal**. Every outstanding simplification is filed as an issue on every terminal exit (merge-ready and max-iterations alike) — no silent drops.
 
 ## Interrupt model
 
@@ -36,6 +45,10 @@ Configurable via `--bar` flag (v1 supports `0-blockers` only; stricter bars are 
 |---|---|
 | Mechanical Blocker (commit-subject length, missing Files path, dead anchor, wording typo, count-of-N inconsistency) | Auto-fix via `Edit`. No interrupt. |
 | Design-pin Blocker (option A vs B with non-trivial downstream implications) | Interrupt with `AskUserQuestion` carrying 2-3 defensible options + "(Recommended)" tag. |
+| `[regression]` structural finding (code PRs) | Hard Blocker — gates every cycle; classified mechanical/design-pin like any Blocker. |
+| `[simplification]` at age 0 (first sighting, code PRs) | Blocker — auto-fix if a trivial extraction, else **one** design-pin interrupt, then deferred (never re-interviewed). |
+| `[simplification]` at age 1-2 (recurred) | Important — does not gate; ages in the ledger, surfaced in the summary. |
+| `[simplification]` at age ≥3 or any terminal | Filed as a GitHub follow-up issue (`P2-backlog`). No interrupt. |
 | Mechanical Important (close-out path only) | Auto-fix via `Edit`. No interrupt. |
 | Design-pin Important (close-out path only) | Interrupt with `AskUserQuestion` — must be resolved this pass. |
 | Mechanical Suggestion (close-out path only — "easy") | Auto-fold via `Edit`. No interrupt. |
@@ -64,6 +77,7 @@ Declining consent skips only the PR comment (step 7.7); the Important + Suggesti
 
 ## See also
 
-- [reference/classify-blockers.md](reference/classify-blockers.md) — mechanical vs design-pin decision tree
+- [reference/classify-blockers.md](reference/classify-blockers.md) — mechanical vs design-pin decision tree (incl. structural-tag handling)
+- [reference/code-quality-rubric.md](reference/code-quality-rubric.md) — the `[regression]` / `[simplification]` rubric the subagent applies on code PRs
 - [reference/review-format.md](reference/review-format.md) — the format the dispatched review subagent must follow
 - [PROMPT.md](PROMPT.md) — the looped prompt the ralph framework feeds back each cycle

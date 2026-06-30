@@ -1,7 +1,7 @@
 {
   "name": "pr-review-loop",
-  "description": "Drive a PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then run a close-out sub-flow that resolves Important findings, folds easy Suggestions, files issues for the rest, and posts one consolidated PR comment.",
-  "version": "1.0.1",
+  "description": "Drive a PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then run a close-out sub-flow that resolves Important findings, folds easy Suggestions, files issues for the rest, and posts one consolidated PR comment. On code-touching PRs it applies a code-quality rubric: structural regressions hard-block, missed simplifications follow a backoff schedule (Blocker, then Important, then a follow-up issue).",
+  "version": "1.1.0",
   "author": {
     "name": "Watson Blair"
   },

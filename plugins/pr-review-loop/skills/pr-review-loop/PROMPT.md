@@ -93,7 +93,7 @@ The stuck-detector runs on **hard Blockers only** (`hard_blocker_text` from Step
    - `options`:
      - `Continue anyway` — proceed to Step 6.5 (then Step 7 / Step 8); the next pass will re-test.
      - `Show diff` — print `hard_blocker_text` and `state.last_blocker_text` side-by-side (or just sequentially with headers), then re-ask this question.
-     - `Abort (Recommended)` — set `state.status = "complete"`, `state.completion_reason = "stuck"` (in-memory only). Print a summary block naming the recurring Blockers. Perform terminal cleanup via `Bash rm .claude/.pr-review-loop.state.json`. Emit `<promise>LOOP_DONE</promise>`. Exit.
+     - `Abort (Recommended)` — set `state.status = "complete"`, `state.completion_reason = "stuck"` (in-memory only). Print a summary block naming the recurring Blockers. **File outstanding simplifications (required terminal discharge):** if `state.deferred_simplifications` is non-empty, run the deferred-simplification filing routine (Step 6.5) over every ledger entry so each becomes a follow-up issue before exit — the stuck terminal drops no simplification; the routine's consent guard asks once (Step 7.1) if consent was never captured. Then perform terminal cleanup via `Bash rm .claude/.pr-review-loop.state.json`. Emit `<promise>LOOP_DONE</promise>`. Exit.
 
 3. **If `overlap ≤ 0.5`:** continue to Step 6.5 (which computes the effective Blocker count and routes to Step 7 or Step 8).
 

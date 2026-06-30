@@ -27,7 +27,7 @@ Prompt each sub-agent with a separate technical brief (file paths, coupling deta
 - Agent 3: "Optimise for the most common caller — make the default case trivial."
 - Agent 4 (if applicable): "Design around ports & adapters for cross-seam dependencies."
 
-Include both the [SKILL.md](SKILL.md) architecture vocabulary and the repo's own domain vocabulary (from its `CLAUDE.md`, subsystem READMEs, and any active `_specs/` bundle) in the brief so each sub-agent names things consistently with the architecture language and the project's domain language.
+Include both the [SKILL.md](SKILL.md) architecture vocabulary and the repo's own domain vocabulary (from its `GLOSSARY.md` if present, `CLAUDE.md`, subsystem READMEs, and any active `_specs/` bundle) in the brief so each sub-agent names things consistently with the architecture language and the project's domain language.
 
 Each sub-agent outputs:
 

@@ -42,10 +42,11 @@ the decision-recording rewire is a routing change, not a behavior change.
 
 ### Rules change this adoption required
 
-Choosing a dedicated `GLOSSARY.md` (over folding the glossary into `CLAUDE.md`) added one
-line to **`<DEV_ROOT>/.claude/rules/04-docs.md`**: `GLOSSARY.md` is registered as a
-first-read AI-tier doc (domain vocabulary, if present; unbudgeted, kept lean by its format).
-This is a lab-os conventions change, logged at the project altitude.
+Choosing a dedicated `GLOSSARY.md` (over folding the glossary into `CLAUDE.md`) required one
+line in **`<DEV_ROOT>/.claude/rules/04-docs.md`** registering `GLOSSARY.md` as a first-read
+AI-tier doc (domain vocabulary, if present; unbudgeted, kept lean by its format). `04-docs.md`
+lives in the dev-home repo, not this plugin repo, so that companion change shipped
+separately — dev-home PR #49 (merged).
 
 ### Exact edits
 

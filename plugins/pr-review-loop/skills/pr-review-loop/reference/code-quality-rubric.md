@@ -83,8 +83,10 @@ shape concretely, not "this could be cleaner."
 across independent fresh passes, prefix each `[simplification]` finding — right after the tag — with
 `(target: <file>::<anchor>)`, where the anchor is the named symbol or construct the smell concerns,
 read from the code rather than your wording. Two fresh passes that word one smell differently must
-still produce the same `target`. See `review-format.md` for the exact placement and the
-no-single-symbol fallback. `[regression]` findings need no target.
+still produce the same `target`. Each target must be **unique per finding** — two distinct smells on
+one symbol get distinct targets (append the smell: `symbol#thin-wrapper`). See `review-format.md` for
+the exact placement, the no-single-symbol fallback, and the same-symbol disambiguation rule.
+`[regression]` findings need no target.
 
 ## How the loop treats each tag (summary; full lifecycle in PROMPT.md Steps 5–6.5)
 

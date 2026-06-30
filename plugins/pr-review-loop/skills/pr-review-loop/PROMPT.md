@@ -109,10 +109,11 @@ Turns `simplifications_this_pass` (Step 5) into severities via an age ledger, th
 
 Skip the whole step on doc/plan-only PRs (no tags ⇒ `simplifications_this_pass` empty and the ledger stays empty): set `effective_blocker_count = hard_blocker_count` and route exactly as before.
 
-1. **Reconcile the ledger against this pass.** For each entry `e` in `simplifications_this_pass`:
-   - If `e.fingerprint` matches an existing ledger entry `L`: it **recurred** — set `L.age = L.age + 1` and refresh `L.finding_text = e.finding_text`.
+1. **Reconcile the ledger against this pass.** First, **dedup within the pass:** if two entries in `simplifications_this_pass` share a `fingerprint` (a reviewer raised two smells on one symbol without the per-finding disambiguation `review-format.md` requires), suffix the collisions (`<fp>#2`, `<fp>#3`, …) so each stays a distinct finding, and note `(deduped <N> colliding targets)` in the Step 6.5 summary — never silently merge two findings into one. Next, snapshot the ledger's fingerprints **as they stand before this pass** into `prior_fps`. Then for each entry `e` in the deduped `simplifications_this_pass`:
+   - If `e.fingerprint` is in `prior_fps` (matches a ledger entry `L` carried from a prior pass): it **recurred** — set `L.age = L.age + 1` and refresh `L.finding_text = e.finding_text`.
    - Else: it is **first seen** — append `{fingerprint: e.fingerprint, first_seen_pass: state.pass, age: 0, finding_text: e.finding_text}`.
-   Then **drop resolved entries:** any ledger entry whose fingerprint is NOT in `simplifications_this_pass` was fixed (the fresh outsider review no longer raises it) — remove it, and do NOT file an issue for it.
+   Match against `prior_fps`, **not** the live ledger, so a within-pass append is never mistaken for a prior-pass recurrence.
+   Then **drop resolved entries:** any ledger entry whose fingerprint is NOT in the deduped `simplifications_this_pass` was fixed (the fresh outsider review no longer raises it) — remove it, and do NOT file an issue for it.
 
 2. **Assign severity by age** (after reconciliation):
    - `age == 0` → **Blocker** (re-admitted to the gate this pass; Step 8 processes it).
@@ -133,7 +134,7 @@ Skip the whole step on doc/plan-only PRs (no tags ⇒ `simplifications_this_pass
 ### Deferred-simplification filing routine
 
 Files one or more ledger entries as GitHub follow-up issues using the **Step 7.5 machinery** (label discovery + `gh issue create`), so the close-out and the terminal paths share one mechanism. **Consent guard:** issue creation acts under the operator's `gh` identity. Before the FIRST issue is filed in this loop, ensure consent is captured. If `state.consent_to_post_pr_comments` is `null`, fire **this routine's own context-accurate question** (NOT Step 7.1's merge-ready wording — that claims "hit 0 Blockers" and "post the final PR comment", both false at the max_iter / stuck / age-≥3 terminals where this routine actually fires):
-- `question`: `Filing <N> outstanding code simplification(s) as follow-up GitHub issues under your gh identity (loop exiting via <state.completion_reason, or "deferral" mid-cycle>). Approve?`
+- `question`: `Filing <N> outstanding code simplification(s) as follow-up GitHub issues under your gh identity (loop exiting via <state.completion_reason, or "deferral" mid-cycle>). This one approval also authorises any later merge-ready close-out posts under your identity (close-out issues + a single consolidated PR comment). Approve?`
 - `header`: `File simplifications`
 - `options`: `Approve (file issues)` → persist `state.consent_to_post_pr_comments = true`; `Decline (no identity posts)` → persist `false`.
 
@@ -158,7 +159,7 @@ When `state.consent_to_post_pr_comments == null`, fire `AskUserQuestion`:
 
 Initialise a per-close-out working buffer `closeout_log` (a list of strings, one per item handled, for the eventual commit body + final comment).
 
-For each Important finding parsed in Step 5 (numbered list items, in order):
+For each Important finding parsed in Step 5 (numbered list items, in order) — **skip any `[simplification]`-tagged item**, which is owned by the Step 6.5 ledger, not close-out:
 
 1. **Read the classifier reference once** if not already loaded this cycle: `Read` on `@@PLUGIN_ROOT@@/skills/pr-review-loop/reference/classify-blockers.md`. The same decision tree applies to Important as to Blockers — the difference is the bar, not the procedure.
 
@@ -181,7 +182,7 @@ For each Important finding parsed in Step 5 (numbered list items, in order):
 
 ### 7.3 Process Suggestions
 
-Initialise a `issues_to_file` working list. For each Suggestion (numbered list items, in order):
+Initialise a `issues_to_file` working list. For each Suggestion (numbered list items, in order) — **skip any `[simplification]`-tagged item** (ledger-owned, per Step 6.5):
 
 1. **Classify** mechanical vs design-pin via the same heuristics.
 
@@ -322,7 +323,7 @@ Otherwise:
    - `Cycles run: <state.pass>` + `Close-out: Important resolved <N>, Suggestions folded <M>, Issues filed <K>`.
    - `Final comment URL: <url>` if 7.7 posted.
    - `Issues filed:` enumerate `filed_issues`.
-3. **Perform terminal cleanup:** `rm .claude/.pr-review-loop.state.json` via `Bash`. The state file is gone; audit trail persists in git log + the final PR comment + the verification review file in `%TEMP%`.
+3. **Perform terminal cleanup:** the ledger was already discharged + cleared at 7.5, so the shared ledger-discharge step here is a safe no-op; `rm .claude/.pr-review-loop.state.json` via `Bash`. The state file is gone; audit trail persists in git log + the final PR comment + the verification review file in `%TEMP%`.
 4. Emit `<promise>LOOP_DONE</promise>` as a standalone line.
 5. Stop.
 
@@ -425,6 +426,6 @@ Only reached when Step 6.5 routed to Step 8 (effective Blocker count > 0), so St
 
 2. The ralph framework's stop hook (registered by the ralph-loop plugin) will intercept the termination, increment the iteration counter in `.claude/ralph-loop.local.md`, and re-feed this PROMPT.md back as the next iteration's input. You'll wake up at Step 1 of the next cycle with the just-persisted state.
 
-3. **Do NOT emit `<promise>LOOP_DONE</promise>` here.** The promise is reserved for terminal exit paths (Step 2's max_iter, Step 6's stuck-abort, Step 7's merge_ready, or any error-path abort that sets `completion_reason = "user_abort"`). Emitting it here would short-circuit the loop after one cycle.
+3. **Do NOT emit `<promise>LOOP_DONE</promise>` here.** The promise is reserved for terminal exit paths: Step 2's max_iter, Step 6.2's stuck-abort, Step 7's merge_ready, and the error/abort branches in Steps 4.4 / 5.3 / 9.8 / 7.6 — which set `completion_reason` to `user_abort` or `stuck`. Emitting it here would short-circuit the loop after one cycle.
 
 4. The framework's `--max-iterations` safety bound is independent of `state.max_iterations`: the ralph framework counts its own iterations and force-stops after the limit set at loop-init time. Step 2 above is the skill-level safety bound and is the one that emits `max_iter`. Both bounds being equal (default 5) means they trip together; if they diverge, Step 2 trips first.

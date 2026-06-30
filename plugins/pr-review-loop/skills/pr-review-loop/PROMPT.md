@@ -43,6 +43,7 @@
      - PR number, repo (`state.repo`), branch (`state.branch`), `sha_before` from Step 3, pass number (`state.pass`)
      - "This is an outsider review. Do NOT read any prior review file. Do NOT anchor on prior decisions. Read the PR's files fresh."
      - Path to the review-format reference: `@@PLUGIN_ROOT@@/skills/pr-review-loop/reference/review-format.md` — instruct the subagent to read it first and follow it exactly, especially `### ` heading levels on findings sections.
+     - **Code-quality rubric (code-touching PRs only):** if this PR changes code — i.e. the diff is **not** exclusively documentation/plan/text (`.md`, docs, plan bundles) — also point the subagent at `@@PLUGIN_ROOT@@/skills/pr-review-loop/reference/code-quality-rubric.md` and instruct it to apply that rubric: tag every **structural** finding it raises with `[regression]` or `[simplification]` as the **first token** of the finding text, placing it in the Blockers/Important/Suggestions section the rubric prescribes (first-sighting simplifications go in Blockers). On a **doc/plan-only PR**, do NOT reference the rubric — the brief is identical to today and the subagent emits no tags.
      - Output review file path (computed above).
      - "Return ONLY: recommendation line, Blocker count, Important count, Suggestion count, output file path. The full review body goes in the file, not the reply."
 3. Wait for the subagent to complete. Do NOT `run_in_background`; this cycle blocks on the result.
@@ -66,8 +67,14 @@
      - Treat-as-0-Blockers (record the parse anomaly in your output, set Blocker count to 0, proceed to Step 6)
      - Abort (set `state.completion_reason = "user_abort"`, perform terminal cleanup, emit promise, exit)
    - **Blockers section body present but Blocker count parses as ambiguous** (e.g. mixed bullets and numbered items): fire same `AskUserQuestion`, recommending Retry.
-4. Store the parsed Blocker section text in a working variable `current_blocker_text` — Step 6 (stuck-detector) and Step 10 (state update) both use it.
-5. Emit summary: `[step 5] parsed: recommendation=<verbatim>; blockers=<N>; important=<M>; suggestions=<S>`.
+4. **Tag scan (code-quality rubric).** On code-touching PRs the subagent tags structural findings (Step 4). Scan every numbered item in the Blockers / Important / Suggestions sections for a leading `[regression]` or `[simplification]` token:
+   - `hard_blocker_count` / `hard_blocker_text` ← the Blocker-section items that are **not** `[simplification]`-tagged: i.e. `[regression]`-tagged items plus untagged Blockers. This is the parse-time gating Blocker count; `[simplification]` items are held out of it.
+   - `regressions_this_pass` ← the `[regression]`-tagged Blocker items (a subset of the hard Blockers, tracked separately only so the summary can report them).
+   - `simplifications_this_pass` ← an ordered list of `{finding_text, fingerprint}` for every `[simplification]`-tagged item, wherever it appears (the rubric places first-sighting simplifications in Blockers). `fingerprint` = the finding's file path + a short normalized slug of its first sentence (lowercased, whitespace-collapsed) — stable enough to re-match the same simplification across passes.
+   - The simplification list is **distinct from `hard_blocker_count`**: a `[simplification]` never inflates the parsed hard-Blocker count. Its effect on the *effective* gate is decided by the backoff lifecycle (Step 6.5), which re-admits a first-sighting (age-0) simplification to the gate, demotes a recurring one to Important, or files it as an issue.
+   - Doc/plan-only PRs carry no tags; all three derived values fall back to the raw Blocker parse and behaviour is identical to today.
+5. Store the parsed Blocker section text in a working variable `current_blocker_text` — Step 6 (stuck-detector) and Step 10 (state update) both use it.
+6. Emit summary: `[step 5] parsed: recommendation=<verbatim>; blockers=<N> (regressions=<R>, simplifications=<Sx>); important=<M>; suggestions=<S>`.
 
 ## Step 6: Stuck-detector
 

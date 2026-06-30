@@ -47,6 +47,17 @@ The review file is a single markdown document with these sections in this order:
 
 **Heading levels are load-bearing.** The findings sections (`### Blockers`, `### Important`, `### Suggestions`, `### Load-bearing strengths`, `### Cross-cutting Q&A`) MUST use `### ` (three hashes). The loop's parser keys off heading level to delimit sections. `## ` works for the top-level `Methodology` / `Recommendation` headings but NOT for findings. Subagents that emit `## Blockers` instead of `### Blockers` will fail the parse and trip the error-path interrupt.
 
+## Structural-finding tags (code-quality rubric)
+
+On **code-touching PRs**, the brief also points the reviewer at `code-quality-rubric.md`. Every **structural** finding that rubric defines — a structural regression or a missed simplification — carries a tag as the **first token** of its finding text:
+
+- `[regression]` — a structural regression this PR introduces (hard Blocker).
+- `[simplification]` — a missed simplification this PR adds (the loop applies a backoff schedule).
+
+Tagged findings populate the **existing** `### Blockers` / `### Important` / `### Suggestions` sections — there is **no new section** and **no change to heading levels**. The tag is metadata the loop reads to route the finding; the section the reviewer places it in still signals severity. Per the rubric, a first-sighting `[simplification]` belongs in `### Blockers`. Non-structural findings (correctness, security, tests, docs) stay **untagged** and unchanged.
+
+On **doc/plan-only PRs** the rubric is not referenced and no tags appear — the format is exactly as described above, without the tag token.
+
 ## Prose tone
 
 - **Outsider reader's eye.** Read what's there, not what's meant. If the doc relies on context only insiders have, that's a finding. If code reads ambiguously, flag it even if the reviewer can guess the intent.

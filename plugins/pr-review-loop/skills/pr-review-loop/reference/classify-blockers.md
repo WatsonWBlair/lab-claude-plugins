@@ -101,3 +101,60 @@ When in doubt, treat as design-pin. The cost of a false-ask is one `AskUserQuest
 **Action:** `AskUserQuestion` with 2-3 defensible options, "(Recommended)" tag on the one matching the existing `pr.yml` topology (option 1).
 
 **What this teaches the classifier:** when the resolution options touch user-facing surfaces (CI topology, consumer API, schema shape), even seemingly-mechanical fixes are design pins.
+
+## Structural-tag findings (code-quality rubric)
+
+On code-touching PRs the review subagent tags structural findings (`code-quality-rubric.md`). The tag — plus the finding's **age** from the Step 6.5 ledger — refines the mechanical-vs-design-pin call:
+
+### `[regression]` — classify through the tree above, unchanged
+
+A `[regression]` is a hard Blocker every cycle until fixed and carries **no age logic** — feed it straight through the decision tree at the top of this file. A regression with a single text-level fix is mechanical; one whose fix has multiple defensible shapes with downstream cost is a design-pin. The tag only marks it a hard Blocker for the gate; it does **not** add a special classification path.
+
+### `[simplification]` at age 0 — mechanical iff the simpler shape is obvious
+
+The first cycle a simplification is seen it is a Blocker (Step 6.5). Classify it:
+
+- **Obvious extraction / inline / dedup** — a single defensible mechanical move with no downstream redesign (inline a thin wrapper; replace a near-duplicate with the existing canonical helper; extract a repeated block into one helper). → **MECHANICAL** (auto-fix via `Edit`).
+- **Real restructure** — reframing a state model, resequencing a flow, collapsing a layer multiple callers traverse: more than one defensible shape, downstream implications. → **DESIGN-PIN** → **exactly one** `AskUserQuestion` (pin b): offer "apply the restructure now" vs "defer it" (+ a middle option if one is clearly defensible). Whatever the answer, the loop does **not** interview this simplification again — if deferred it ages out (Important, then issue).
+
+### `[simplification]` at age ≥ 1 — never interviewed, never auto-refactored
+
+Once a simplification has recurred (age ≥ 1) it has **left the gate** (Step 6.5 demoted it to Important). It is **not** processed by the Step 8 fix loop and **not** picked up by close-out Step 7.2 / 7.3 — it lives only in the `deferred_simplifications` ledger and is **routed to issue filing** at a terminal. Do not classify, interview, or `Edit` it. This is the backoff's "step aside" half: one cycle of real push at age 0, then a tracked issue.
+
+## Worked examples — structural tags
+
+### Example 4: `[simplification]`-trivial → mechanical (age 0)
+
+> "[simplification] `client.ts` — `getUser()` is a one-line wrapper around `api.fetch('/user')` that adds no validation, caching, or error mapping. Inline it; callers can hit `api.fetch` directly."
+
+**Walk:** tag `[simplification]`, age 0 → is the simpler shape obvious? YES — inline a thin wrapper, one defensible move, no downstream redesign. → MECHANICAL.
+
+**Action:** `Edit` to inline the wrapper at its call sites; record in `cycle_fix_log`.
+
+**What this teaches:** an identity abstraction with a single call shape is a mechanical delete, not a pin.
+
+### Example 5: `[simplification]`-restructure → design-pin, then defer (age 0)
+
+> "[simplification] `reducer.ts` — the `pending` / `loading` / `inFlight` booleans this PR adds encode one three-state machine; modeling them as a single `status: 'idle' | 'loading' | 'done'` enum would delete the cross-field invariants the PR now has to defend."
+
+**Walk:** tag `[simplification]`, age 0 → simpler shape obvious? NO — a state-model reframe, multiple call sites read the booleans, more than one defensible target shape. → DESIGN-PIN → one `AskUserQuestion`: "collapse to a `status` enum now" (Recommended if low-risk) vs "defer (file as a follow-up)".
+
+**Action:** apply the chosen option, or — if deferred — make no edit; the entry ages next pass and is **never re-interviewed**.
+
+**What this teaches:** a structural reframe is a pin, not an auto-fix — but it gets **one** ask, not one per cycle. The backoff, not repeated interviews, carries it the rest of the way.
+
+### Example 6: `[simplification]` at age ≥ 1 → issue, no interview
+
+> The same `reducer.ts` finding as Example 5, recurring on pass 2 after the user deferred it.
+
+**Walk:** tag `[simplification]`, age 1 → already demoted to Important by Step 6.5; out of the gate. → **No classification.** It is not fixed and not interviewed; it stays in the ledger and is filed as a `P2-backlog` issue at the next terminal.
+
+**What this teaches:** age, not just tag, decides handling — a recurring simplification is a tracked follow-up, never a fresh interrupt.
+
+### Example 7: `[regression]` → existing tree, unchanged
+
+> "[regression] `pipeline.ts` — this PR routes the export-CSV special case through the shared `serialize()` used by every output format; the `if (format === 'csv')` branch now sits in the canonical path."
+
+**Walk:** tag `[regression]` → feed through the top-of-file tree. Single text-level fix? The fix is "lift the csv branch back to the export-CSV caller" — one structural move, no competing defensible shapes. → MECHANICAL. (Had the fix been "pick one of three places to put it, each with downstream cost", it would be DESIGN-PIN — the same tree as any Blocker.)
+
+**What this teaches:** `[regression]` adds no special path; the tag only marks it a hard Blocker for the gate. Classification stays the ordinary tree.

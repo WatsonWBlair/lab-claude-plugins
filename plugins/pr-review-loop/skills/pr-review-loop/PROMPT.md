@@ -85,7 +85,7 @@ The stuck-detector runs on **hard Blockers only** (`hard_blocker_text` from Step
    - Split each by newline, strip whitespace, drop empty lines.
    - Convert each to a set of unique lines.
    - `overlap = len(current ∩ prior) / max(len(current), len(prior))`
-   - If `len(current) == 0` and `len(prior) == 0`: skip the detector (defensive — Step 5 would have routed Blocker count = 0 to Step 7 anyway).
+   - If `len(current) == 0` and `len(prior) == 0`: skip the detector (defensive — with no hard Blockers on either side, Step 6.5 owns the routing decision this pass).
 
 2. **If `overlap > 0.5`:** the loop is likely stuck (same Blockers recurring). Fire `AskUserQuestion`:
    - `question`: `Loop may be stuck — pass <K>'s Blockers overlap pass <K-1>'s by <round(overlap*100)>%. Abort?`
@@ -255,11 +255,11 @@ The close-out commit might have regressed the review. Run one more Opus pass aga
 
 3. **Dispatch** an Opus subagent via `Agent` (same brief shape as Step 4, but: pass `sha_after_closeout` from 7.4 as the head sha; output to the verify file path; emphasize "this is a verification pass after a close-out commit"). Wait for completion.
 
-4. **Parse the verification review** like Step 5: extract recommendation, Blocker count, Important count, Suggestions count, sections.
+4. **Parse the verification review** like Step 5: extract recommendation, Blocker count, Important count, Suggestions count, sections. This is a terminal **regression gate**, not a fresh backoff cycle: count **hard Blockers only** (`[regression]` + untagged). A `[simplification]` the verification pass newly surfaces in the close-out diff is filed as a follow-up issue via the deferred-simplification filing routine (Step 6.5), **not** blocked on — the loop does not re-enter the simplification lifecycle at the merge-ready terminal.
 
-5. **If verification Blocker count == 0:** continue to 7.7 using the verification review file as the source.
+5. **If the verification hard-Blocker count == 0:** continue to 7.7 using the verification review file as the source.
 
-6. **If verification Blocker count > 0:** the close-out regressed the review. Fire `AskUserQuestion`:
+6. **If the verification hard-Blocker count > 0:** the close-out regressed the review. Fire `AskUserQuestion`:
    - `question`: `Close-out fixes triggered <N> Blockers in the verification pass. How to proceed?`
    - `header`: `Close-out regression`
    - `options`:

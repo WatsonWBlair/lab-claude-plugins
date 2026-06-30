@@ -84,7 +84,8 @@ across independent fresh passes, prefix each `[simplification]` finding — righ
 `(target: <file>::<anchor>)`, where the anchor is the named symbol or construct the smell concerns,
 read from the code rather than your wording. Two fresh passes that word one smell differently must
 still produce the same `target`. Each target must be **unique per finding** — two distinct smells on
-one symbol get distinct targets (append the smell: `symbol#thin-wrapper`). See `review-format.md` for
+one symbol get distinct targets (append the smell: `symbol#thin-wrapper`); this disambiguation, not
+emission order, is what keeps the loop tracking them stably across passes. See `review-format.md` for
 the exact placement, the no-single-symbol fallback, and the same-symbol disambiguation rule.
 `[regression]` findings need no target.
 

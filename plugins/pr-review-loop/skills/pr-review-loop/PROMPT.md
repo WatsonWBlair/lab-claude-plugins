@@ -129,12 +129,12 @@ Skip the whole step on doc/plan-only PRs (no tags ⇒ `simplifications_this_pass
    - `effective_blocker_count == 0` → continue to **Step 7** (merge-ready close-out). Any ledger entries still present (age 1–2) are filed there via Step 7.5.
    - `effective_blocker_count > 0` → continue to **Step 8** (fix loop) using `gate_blocker_text`.
 
-5. Emit summary: `[step 6.5] simplifications: <new> new (age0→Blocker), <aging> aging (age1-2→Important), <filed> filed (age>=3); effective blockers=<effective_blocker_count> (hard=<hard_blocker_count> + age0=<len(age0_simplifications)>)`.
+5. Emit summary: `[step 6.5] simplifications: <new> new (age0→Blocker), <aging> aging (age1-2→Important), <filed> filed (age>=3)<; deduped <D> colliding targets — only if D>0>; effective blockers=<effective_blocker_count> (hard=<hard_blocker_count> + age0=<len(age0_simplifications)>)`.
 
 ### Deferred-simplification filing routine
 
 Files one or more ledger entries as GitHub follow-up issues using the **Step 7.5 machinery** (label discovery + `gh issue create`), so the close-out and the terminal paths share one mechanism. **Consent guard:** issue creation acts under the operator's `gh` identity. Before the FIRST issue is filed in this loop, ensure consent is captured. If `state.consent_to_post_pr_comments` is `null`, fire **this routine's own context-accurate question** (NOT Step 7.1's merge-ready wording — that claims "hit 0 Blockers" and "post the final PR comment", both false at the max_iter / stuck / age-≥3 terminals where this routine actually fires):
-- `question`: `Filing <N> outstanding code simplification(s) as follow-up GitHub issues under your gh identity (loop exiting via <state.completion_reason, or "deferral" mid-cycle>). This one approval also authorises any later merge-ready close-out posts under your identity (close-out issues + a single consolidated PR comment). Approve?`
+- `question`: `Filing <N> outstanding code simplification(s) as follow-up GitHub issues under your gh identity (<at a terminal: "loop exiting via " + state.completion_reason; at the mid-cycle age-3 discharge: "triggered by an age-3 deferral; loop continuing">). This one approval also authorises any later merge-ready close-out posts under your identity (close-out issues + a single consolidated PR comment). Approve?`
 - `header`: `File simplifications`
 - `options`: `Approve (file issues)` → persist `state.consent_to_post_pr_comments = true`; `Decline (no identity posts)` → persist `false`.
 

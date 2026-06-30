@@ -37,7 +37,7 @@ Configurable via `--bar` flag (v1 supports `0-blockers` only; stricter bars are 
 Each review pass also applies a structural rubric (`reference/code-quality-rubric.md`, adapted from Cursor's MIT-licensed `thermo-nuclear-code-quality-review`). The subagent tags each structural finding `[regression]` or `[simplification]`; only findings this PR introduces are in scope. Doc/plan-only PRs are unchanged — the rubric is not referenced.
 
 - **`[regression]`** (1000-line crossing in-diff, ad-hoc branch in an unrelated flow, feature logic leaked into a shared path) — a hard Blocker every cycle until fixed.
-- **`[simplification]`** (code-judo smells: thin wrappers, cast/optionality churn, near-duplicate of a canonical helper) — backs off: **Blocker at age 0**, **Important at age 1–2**, **follow-up issue at age ≥ 3 or any terminal**. Every outstanding simplification is filed as an issue on every terminal exit (merge-ready and max-iterations alike) — no silent drops.
+- **`[simplification]`** (code-judo smells: thin wrappers, cast/optionality churn, near-duplicate of a canonical helper) — backs off: **Blocker at age 0**, **Important at age 1–2**, **follow-up issue at age ≥ 3 or any terminal**. Every outstanding simplification is discharged on **every** terminal exit (merge-ready, max-iterations, stuck-abort, and the error-aborts) — filed as an issue with consent, or listed for manual filing if consent is declined; never silently dropped. Each `[simplification]` carries a `(target: file::symbol)` key derived from the code, so the loop re-matches the same finding across fresh re-worded passes.
 
 ## Interrupt model
 
@@ -48,11 +48,11 @@ Each review pass also applies a structural rubric (`reference/code-quality-rubri
 | `[regression]` structural finding (code PRs) | Hard Blocker — gates every cycle; classified mechanical/design-pin like any Blocker. |
 | `[simplification]` at age 0 (first sighting, code PRs) | Blocker — auto-fix if a trivial extraction, else **one** design-pin interrupt, then deferred (never re-interviewed). |
 | `[simplification]` at age 1-2 (recurred) | Important — does not gate; ages in the ledger, surfaced in the summary. |
-| `[simplification]` at age ≥3 or any terminal | Filed as a GitHub follow-up issue (`P2-backlog`). No interrupt. |
+| `[simplification]` at age ≥3 or any terminal | Filed as a GitHub follow-up issue (`P2-backlog`), consent-gated. No interrupt. |
 | Mechanical Important (close-out path only) | Auto-fix via `Edit`. No interrupt. |
 | Design-pin Important (close-out path only) | Interrupt with `AskUserQuestion` — must be resolved this pass. |
 | Mechanical Suggestion (close-out path only — "easy") | Auto-fold via `Edit`. No interrupt. |
-| Design-pin Suggestion (close-out path only — non-easy) | File as GitHub issue automatically. No interrupt. |
+| Design-pin Suggestion (close-out path only — non-easy) | File as GitHub issue (consent-gated). No interrupt. |
 | Stuck loop (this pass's Blocker text overlaps prior pass's by >50% of lines) | Interrupt with `AskUserQuestion`: abort / continue / show-diff. |
 | Verification re-review regression (close-out fixes triggered new Blockers) | Interrupt with `AskUserQuestion`: stop-as-stuck (default) / continue-as-fresh-cycle / force-exit-as-merge-ready. |
 | `pass > max_iterations` | Stop. Print summary. State file persists for inspection. |
@@ -73,7 +73,7 @@ Slash command initializes state at `<active-repo>/.claude/.pr-review-loop.state.
 
 The loop's terminal `merge_ready` path runs a close-out sub-flow that (a) commits + pushes additional fixes for Important + easy Suggestions, (b) files GitHub issues for non-foldable items under the active `gh` user identity, and (c) posts a consolidated final PR comment under that same identity. On the first cycle where merge_ready is reachable, the loop fires an `AskUserQuestion` requesting consent for the entire close-out scope (not just the comment). The answer persists in `state.consent_to_post_pr_comments` for the remainder of this loop only; a new `/pr-review-loop` invocation on a different PR re-asks.
 
-Declining consent skips only the PR comment (step 7.7); the Important + Suggestions work and issue filing still proceed because those are the substance of the close-out.
+Declining consent withholds **all** `gh`-identity posts — no PR comment **and** no issue filing. The Important + easy-Suggestion fixes still apply (those are branch commits, already authorized by running the loop); the items that would have been filed (design-pin Suggestions + any deferred simplifications) are listed in the terminal summary for you to file manually, so nothing is silently dropped. The same consent governs the filing routine at the non-merge-ready terminals (max-iterations, stuck-abort), which asks its own context-accurate question there rather than reusing this close-out prompt.
 
 ## See also
 

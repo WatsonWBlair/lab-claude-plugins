@@ -3,7 +3,7 @@
   Source: github.com/cursor/plugins (cursor-team-kit / thermos), MIT licensed, © 2026 Cursor.
   Lifted and re-shaped for pr-review-loop's convergence-seeking loop: the original's
   "block on any missed simplification" stance is replaced by the two-tier tag + backoff
-  schedule below so the 0-Blocker merge bar stays reachable. See ../../../docs/plans/
+  schedule below so the 0-Blocker merge bar stays reachable. See ../../../../../docs/plans/
   2026-06-30-pr-review-quality-rubric/log.md for the design rationale.
 -->
 
@@ -79,7 +79,14 @@ flatten nested conditionals into early returns, replace a hand-rolled loop with 
 call. The throughline is **less code carrying the same behavior** — the reviewer states the simpler
 shape concretely, not "this could be cleaner."
 
-## How the loop treats each tag (summary; full lifecycle in PROMPT.md Step 3 logic)
+**Emit a `target:` key with every `[simplification]`.** So the loop can track the same simplification
+across independent fresh passes, prefix each `[simplification]` finding — right after the tag — with
+`(target: <file>::<anchor>)`, where the anchor is the named symbol or construct the smell concerns,
+read from the code rather than your wording. Two fresh passes that word one smell differently must
+still produce the same `target`. See `review-format.md` for the exact placement and the
+no-single-symbol fallback. `[regression]` findings need no target.
+
+## How the loop treats each tag (summary; full lifecycle in PROMPT.md Steps 5–6.5)
 
 - `[regression]` → counted as a gating **Blocker** every cycle until resolved.
 - `[simplification]` → **Blocker at age 0** (first cycle it's seen), **Important at age 1–2**, then

@@ -2,7 +2,11 @@
 
 > **For the looping Claude instance:** This prompt is fed to you each iteration by the ralph-loop framework. Read state, do the cycle's work, persist state, attempt exit. The framework re-feeds this prompt until you emit `<promise>LOOP_DONE</promise>`. Steps 1-11 below are the full per-cycle workflow.
 
-> **Terminal cleanup routine:** every terminal exit path (max_iter, stuck-abort, merge_ready, user_abort) must delete `.claude/.pr-review-loop.state.json` via `Bash rm` BEFORE emitting `<promise>LOOP_DONE</promise>`. The audit trail lives in three durable places that don't depend on the state file: (a) per-cycle commits in `git log` (subjects + bodies enumerate fixes), (b) per-cycle review files in `%TEMP%` (OS-managed), (c) the final consolidated PR comment on GitHub. Crashed loops (process death mid-cycle) leave the state file in place — this is intentional, the file's presence tells the next `/pr-review-loop` invocation that a loop was in flight and prompts `--restart` or `/cancel-ralph`.
+> **Terminal cleanup routine:** every terminal exit path (max_iter, stuck-abort, merge_ready, and the user_abort / error-abort branches in Steps 4.4 / 5.3 / 9.8) must, in this order: (1) **run the ledger-discharge step** (below), then (2) delete `.claude/.pr-review-loop.state.json` via `Bash rm`, then (3) emit `<promise>LOOP_DONE</promise>`.
+>
+> **Ledger-discharge step (single definition — every terminal invokes it, none re-implements it):** if `state.deferred_simplifications` is non-empty, run the deferred-simplification filing routine (Step 6.5) over every remaining entry so each becomes a follow-up issue (its consent guard asks once). This is the single guarantee behind the PRD's "no simplification dropped on any terminal exit path". A terminal that already discharged + cleared the ledger as part of its own logic — the merge-ready close-out folds the ledger into `issues_to_file` in Step 7.5 and clears it — finds the ledger empty here, so the step is a safe no-op, never a double-file. Adding a new terminal? Invoke this step before the `rm`.
+>
+> The audit trail lives in three durable places that don't depend on the state file: (a) per-cycle commits in `git log` (subjects + bodies enumerate fixes), (b) per-cycle review files in `%TEMP%` (OS-managed), (c) the final consolidated PR comment on GitHub. Crashed loops (process death mid-cycle) leave the state file in place — this is intentional, the file's presence tells the next `/pr-review-loop` invocation that a loop was in flight and prompts `--restart` or `/cancel-ralph`.
 
 ## Step 1: Read state and surface status banner
 
@@ -16,9 +20,9 @@
 ## Step 2: Safety bound check (max_iterations)
 
 1. If `state.pass > state.max_iterations`:
-   a. Compose a terminal summary block naming: the path to the latest review file (`%TEMP%/pr<pr_number>_review_pass<state.pass - 1>.md` on Windows; `${TMPDIR:-/tmp}/pr<pr_number>_review_pass<state.pass - 1>.md` on POSIX), the final Blocker count from `state.blocker_history[-1].count` (or 0 if the array is empty), the count of simplifications about to be filed (`len(state.deferred_simplifications)`), the state file path, and a one-line reason ("safety bound reached after N cycles without meeting the 0-Blocker bar").
+   a. Compose a terminal summary block naming: the path to the latest review file (`%TEMP%/pr<pr_number>_review_pass<state.pass - 1>.md` on Windows; `${TMPDIR:-/tmp}/pr<pr_number>_review_pass<state.pass - 1>.md` on POSIX), the final **effective** Blocker count from `state.blocker_history[-1].count` (hard Blockers + age-0 simplifications; or 0 if the array is empty), the count of simplifications about to be filed (`len(state.deferred_simplifications)`), the state file path, and a one-line reason ("safety bound reached after N cycles without meeting the 0-Blocker bar").
    b. Update the state object: `state.status = "complete"`, `state.completion_reason = "max_iter"` (in-memory only — the file is about to be deleted).
-   c. **File outstanding simplifications (required terminal discharge).** If `state.deferred_simplifications` is non-empty, run the **deferred-simplification filing routine** (Step 6.5) over every ledger entry so each becomes a follow-up issue before exit — no simplification is dropped at the safety bound. The routine's consent guard asks once (Step 7.1) if consent was never captured this loop.
+   c. **Run the ledger-discharge step** (terminal-cleanup routine, top of file): if `state.deferred_simplifications` is non-empty, the deferred-simplification filing routine (Step 6.5) files each remaining entry as a follow-up issue — no simplification is dropped at the safety bound; its consent guard asks once if consent was never captured. Capture any filed-issue numbers for step d's summary.
    d. Emit the summary block visibly (including any filed-issue numbers).
    e. Perform terminal cleanup: `rm .claude/.pr-review-loop.state.json` via `Bash`.
    f. Emit `<promise>LOOP_DONE</promise>` as a standalone line.
@@ -51,7 +55,7 @@
 4. On subagent error or empty / missing output file: fire an `AskUserQuestion` with options:
    - Retry (re-dispatch with the same brief)
    - Change model (re-dispatch with `model: sonnet`)
-   - Abort (set `state.completion_reason = "user_abort"`, perform terminal cleanup via `Bash rm .claude/.pr-review-loop.state.json`, emit `<promise>LOOP_DONE</promise>`, exit)
+   - Abort (set `state.completion_reason = "user_abort"`, perform terminal cleanup — run the ledger-discharge step, then `Bash rm .claude/.pr-review-loop.state.json` — emit `<promise>LOOP_DONE</promise>`, exit)
 5. Emit a one-line summary: `[step 4] review dispatched → <output file path>; <N> blockers / <M> important / <S> suggestions`.
 
 ## Step 5: Parse review file
@@ -71,7 +75,7 @@
 4. **Tag scan (code-quality rubric).** On code-touching PRs the subagent tags structural findings (Step 4). Scan every numbered item in the Blockers / Important / Suggestions sections for a leading `[regression]` or `[simplification]` token:
    - `hard_blocker_count` / `hard_blocker_text` ← the Blocker-section items that are **not** `[simplification]`-tagged: i.e. `[regression]`-tagged items plus untagged Blockers. This is the parse-time gating Blocker count; `[simplification]` items are held out of it.
    - `regressions_this_pass` ← the `[regression]`-tagged Blocker items (a subset of the hard Blockers, tracked separately only so the summary can report them).
-   - `simplifications_this_pass` ← an ordered list of `{finding_text, fingerprint}` for every `[simplification]`-tagged item, wherever it appears (the rubric places first-sighting simplifications in Blockers). `fingerprint` = the finding's file path + a short normalized slug of its first sentence (lowercased, whitespace-collapsed) — stable enough to re-match the same simplification across passes.
+   - `simplifications_this_pass` ← an ordered list of `{finding_text, fingerprint}` for every `[simplification]`-tagged item, wherever it appears (the rubric places first-sighting simplifications in Blockers). `fingerprint` = the finding's **`target:` key** — the `(target: <file>::<anchor>)` token the rubric (`review-format.md`) requires on every `[simplification]` — normalized (lowercased, whitespace-collapsed). The target is a structural anchor read from the **code** (a symbol/construct), **not** the finding's prose, so independent fresh passes that re-word the same simplification still produce the **same** fingerprint — this is what lets the age ledger (Step 6.5) track one finding across passes. Fallback: if a `[simplification]` carries no parseable `(target: …)`, derive `fingerprint` from `<file path>::<first-sentence-slug>` and append `(degraded fingerprint — reviewer omitted target)` to the Step 6.5 summary so the weaker match is visible; the parse never fails on a missing target.
    - The simplification list is **distinct from `hard_blocker_count`**: a `[simplification]` never inflates the parsed hard-Blocker count. Its effect on the *effective* gate is decided by the backoff lifecycle (Step 6.5), which re-admits a first-sighting (age-0) simplification to the gate, demotes a recurring one to Important, or files it as an issue.
    - Doc/plan-only PRs carry no tags; all three derived values fall back to the raw Blocker parse and behaviour is identical to today.
 5. The stuck-detector (Step 6) and state update (Step 10) operate on `hard_blocker_text` (the hard Blockers from step 4 — regressions + untagged, **excluding** `[simplification]` findings). Recurring simplifications are deliberately kept out of the stuck input so they age out via Step 6.5 without tripping a false stuck-interrupt. `simplifications_this_pass` carries forward to Step 6.5.
@@ -93,7 +97,7 @@ The stuck-detector runs on **hard Blockers only** (`hard_blocker_text` from Step
    - `options`:
      - `Continue anyway` — proceed to Step 6.5 (then Step 7 / Step 8); the next pass will re-test.
      - `Show diff` — print `hard_blocker_text` and `state.last_blocker_text` side-by-side (or just sequentially with headers), then re-ask this question.
-     - `Abort (Recommended)` — set `state.status = "complete"`, `state.completion_reason = "stuck"` (in-memory only). Print a summary block naming the recurring Blockers. **File outstanding simplifications (required terminal discharge):** if `state.deferred_simplifications` is non-empty, run the deferred-simplification filing routine (Step 6.5) over every ledger entry so each becomes a follow-up issue before exit — the stuck terminal drops no simplification; the routine's consent guard asks once (Step 7.1) if consent was never captured. Then perform terminal cleanup via `Bash rm .claude/.pr-review-loop.state.json`. Emit `<promise>LOOP_DONE</promise>`. Exit.
+     - `Abort (Recommended)` — set `state.status = "complete"`, `state.completion_reason = "stuck"` (in-memory only). Print a summary block naming the recurring Blockers. Then **perform terminal cleanup** (top-of-file routine): run the ledger-discharge step (the stuck terminal files any outstanding simplifications, dropping none), `rm .claude/.pr-review-loop.state.json`, and emit `<promise>LOOP_DONE</promise>`. Exit.
 
 3. **If `overlap ≤ 0.5`:** continue to Step 6.5 (which computes the effective Blocker count and routes to Step 7 or Step 8).
 
@@ -128,7 +132,14 @@ Skip the whole step on doc/plan-only PRs (no tags ⇒ `simplifications_this_pass
 
 ### Deferred-simplification filing routine
 
-Files one or more ledger entries as GitHub follow-up issues using the **Step 7.5 machinery** (label discovery + `gh issue create`), so the close-out and the terminal paths share one mechanism. **Consent guard:** issue creation acts under the operator's `gh` identity, so before the FIRST issue is filed in this loop, ensure consent is captured — if `state.consent_to_post_pr_comments` is `null`, fire the Step 7.1 consent question now and persist the answer (a `false` answer still files issues — declining only skips the final PR comment, per Step 7.1 — but the question is asked once so filing is never silent). For each entry: build the issue with `kind = "simplification"`, `finding_text` as the body's Finding section, and default label `P2-backlog` (skipped if the repo lacks it); append each result to `filed_issues`.
+Files one or more ledger entries as GitHub follow-up issues using the **Step 7.5 machinery** (label discovery + `gh issue create`), so the close-out and the terminal paths share one mechanism. **Consent guard:** issue creation acts under the operator's `gh` identity. Before the FIRST issue is filed in this loop, ensure consent is captured. If `state.consent_to_post_pr_comments` is `null`, fire **this routine's own context-accurate question** (NOT Step 7.1's merge-ready wording — that claims "hit 0 Blockers" and "post the final PR comment", both false at the max_iter / stuck / age-≥3 terminals where this routine actually fires):
+- `question`: `Filing <N> outstanding code simplification(s) as follow-up GitHub issues under your gh identity (loop exiting via <state.completion_reason, or "deferral" mid-cycle>). Approve?`
+- `header`: `File simplifications`
+- `options`: `Approve (file issues)` → persist `state.consent_to_post_pr_comments = true`; `Decline (no identity posts)` → persist `false`.
+
+Persist the answer (asked at most once per loop). When this routine is invoked from the merge-ready close-out (Step 7.5), consent was already captured at Step 7.1, so it does not re-fire here. Then branch on consent:
+- **`false`** (declined here or at Step 7.1): do **not** file — list every would-be entry (`finding_text` + intended label) in the terminal / close-out summary so the operator can file manually. A declined `gh`-identity action posts nothing; the findings are surfaced, never silently dropped.
+- **`true`**: for each entry, build the issue with `kind = "simplification"`, `finding_text` as the body's Finding section, and default label `P2-backlog` (skipped if the repo lacks it); append each result to `filed_issues`.
 
 ## Step 7: Merge-ready close-out path (effective Blocker count == 0)
 
@@ -141,7 +152,7 @@ When `state.consent_to_post_pr_comments == null`, fire `AskUserQuestion`:
 - `header`: `Close-out consent`
 - `options`:
   - `Accept and close out (Recommended)` — persist `state.consent_to_post_pr_comments = true`; proceed to 7.2.
-  - `Decline (skip comment)` — persist `false`; STILL proceed through 7.2–7.6 (Important + Suggestions are resolved; issues filed); but skip 7.7's PR comment. Still mark merge_ready.
+  - `Decline (no identity posts)` — persist `false`; STILL proceed through 7.2–7.4 (Important + Suggestions are resolved and committed — branch commits, already authorized by running the loop), but make **no `gh`-identity post**: 7.5 files no issues and 7.7 posts no comment. The items 7.5 would have filed (design-pin Suggestions + the deferred-simplification ledger) are listed in the terminal summary for manual filing. Still mark merge_ready.
 
 ### 7.2 Process Important items
 
@@ -215,7 +226,9 @@ Otherwise:
 
 ### 7.5 File issues for non-folded items
 
-**First, fold in the deferred simplifications.** Append every remaining `state.deferred_simplifications` entry to `issues_to_file` as `{kind: "simplification", finding_text: <entry.finding_text>, age: <entry.age>}`, then clear the ledger (`state.deferred_simplifications = []`) — they are being filed now. This is the merge-ready terminal's discharge of the backoff schedule: no outstanding simplification is dropped.
+**First, fold in the deferred simplifications.** Append every remaining `state.deferred_simplifications` entry to `issues_to_file` as `{kind: "simplification", finding_text: <entry.finding_text>, age: <entry.age>}`, then clear the ledger (`state.deferred_simplifications = []`) — they are accounted for here. This is the merge-ready terminal's discharge of the backoff schedule: no outstanding simplification is dropped.
+
+**Consent guard.** If `state.consent_to_post_pr_comments != true` (declined at Step 7.1), do NOT file: list each `issues_to_file` entry (`finding_text` + intended label) in the close-out summary for manual filing, set `filed_issues = []`, and skip the rest of 7.5. Filing acts under the operator's `gh` identity, which a decline withholds; surfacing the list keeps the no-silent-drops guarantee.
 
 If `issues_to_file` is empty, skip. Otherwise:
 

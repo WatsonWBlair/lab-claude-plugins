@@ -5,7 +5,7 @@ discarded alternatives, and in-flight deviations. Append-only, oldest-first.
 
 ---
 
-## 2026-06-30 — Improve pr-review-loop rather than vendor a standalone thermo-nuclear skill
+## 2026-06-30 01:00 — Improve pr-review-loop rather than vendor a standalone thermo-nuclear skill
 
 **Decision:** Lift the core patterns of Cursor's `thermo-nuclear-code-quality-review` (MIT) into
 the existing `pr-review-loop` skill instead of vendoring it as a standalone review skill.
@@ -18,7 +18,7 @@ security + orchestrator) — rejected, overlaps `/code-review` + `/security-revi
 
 ---
 
-## 2026-06-30 — Backoff lifecycle for simplification findings (pin b + decay schedule)
+## 2026-06-30 01:30 — Backoff lifecycle for simplification findings (pin b + decay schedule)
 
 **Decision:** Two-tier rubric. `[regression]` findings (1k-line crossing in-diff, spaghetti branch
 into unrelated flow, feature-logic leak) are hard Blockers throughout. `[simplification]` findings
@@ -35,7 +35,7 @@ every cycle. Demote-on-first-recurrence (one nudge) — superseded by the owner'
 
 ---
 
-## 2026-06-30 — Reuse existing machinery; no parallel loop
+## 2026-06-30 02:00 — Reuse existing machinery; no parallel loop
 
 **Decision:** Recurrence/age detection reuses Step 6's overlap mechanism; issue-filing reuses Step
 7.5; the terminal fallback extends Step 2 (max_iter) and Step 7 (close-out). Only one new state
@@ -45,7 +45,7 @@ self-demotes also reduces false stuck-interrupts (a free win on the existing Ste
 
 ---
 
-## 2026-06-30 — Deviation: ledger entry carries `finding_text` beyond the planned schema
+## 2026-06-30 03:00 — Deviation: ledger entry carries `finding_text` beyond the planned schema
 
 **Decision:** `deferred_simplifications` entries are `{fingerprint, first_seen_pass, age, finding_text}`
 — `finding_text` added to the plan's `{fingerprint, first_seen_pass, age}`.
@@ -56,7 +56,7 @@ the lifecycle. Logged per the deviation-from-approved-plan routing in `.claude/r
 
 ---
 
-## 2026-06-30 — Gate evidence: backoff lifecycle hand-trace (Task 3 verification)
+## 2026-06-30 03:30 — Gate evidence: backoff lifecycle hand-trace (Task 3 verification)
 
 **Decision:** Task 3's lifecycle verified by hand-trace (no automated gate exists for prompt logic).
 `max_iterations = 5` throughout; S1 = a `[simplification]`, R = a `[regression]`.
@@ -83,3 +83,37 @@ the lifecycle. Logged per the deviation-from-approved-plan routing in `.claude/r
   merge-ready at 0 hard Blockers within `max_iterations`.
 
 **Refs:** PROMPT.md Steps 2 / 5 / 6 / 6.5 / 7.5 / 8 / 9 / 10; scripts/setup.sh seed.
+
+---
+
+## 2026-06-30 04:30 — Fingerprint on a structural `target:` key, not the finding's prose
+
+**Decision:** The simplification ledger fingerprints each `[simplification]` on a `(target: <file>::<symbol>)`
+key the reviewer emits from the code, not on a normalized slug of the finding's first sentence. Matching
+is exact on the normalized target. The reviewer is required to emit it (`review-format.md`,
+`code-quality-rubric.md`); a missing target degrades to the old slug with a flagged-in-summary warning.
+**Why:** the loop dispatches a fresh, un-anchored review each pass, so reviewers re-word the same finding
+independently; a prose-derived fingerprint never re-matches, which (a) stalls aging — a re-worded
+recurrence reads as first-seen, re-blocking every cycle — and (b) silently drops a live finding mis-read
+as resolved. A code-derived key (the named symbol/construct) is stable across re-wordings, so the backoff
+arc actually holds. Surfaced by the pass-2 (Opus) audit of PR #5.
+**Alternatives:** carry the prior ledger's fingerprints into the fresh reviewer's brief — rejected, breaks
+the no-anchoring outsider posture the whole loop depends on. Coarse file-path-only key — rejected, collides
+distinct smells in one file. Scope-cut the backoff to a follow-up — considered; owner chose fix-properly.
+**Refs:** PROMPT.md Step 5.4; reference/review-format.md; reference/code-quality-rubric.md.
+
+---
+
+## 2026-06-30 04:31 — Terminal discharge centralized; decline = no gh-identity post
+
+**Decision:** (a) All six terminal exit paths (max_iter, stuck-abort, merge-ready, and the error-aborts at
+Steps 4.4 / 5.3 / 9.8) discharge the deferred-simplification ledger via one shared "ledger-discharge step"
+before cleanup. (b) The filing routine fires its own context-accurate consent question rather than reusing
+Step 7.1's merge-ready wording. (c) A declined consent (`false`) performs **no** `gh`-identity post anywhere
+— no PR comment, no issue filing — and surfaces the would-be posts in the summary for manual handling;
+branch-commit fixes still apply.
+**Why:** the pass-2 audit found three error-abort terminals silently dropped the ledger (violating "no silent
+drops on every terminal"), and the reused Step 7.1 text made false claims ("hit 0 Blockers", "post the final
+comment") in every context the filing routine actually fired. The prior "decline still files issues" also
+contradicted the global rule that declining a user-identity action posts nothing.
+**Refs:** PROMPT.md terminal-cleanup routine + Steps 2 / 4.4 / 5.3 / 6.2 / 7.1 / 7.5 / 9.8.

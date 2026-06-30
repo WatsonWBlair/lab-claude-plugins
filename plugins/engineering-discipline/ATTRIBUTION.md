@@ -68,8 +68,8 @@ separately — dev-home PR #49 (merged).
 - **`improve-codebase-architecture/HTML-REPORT.md`** — "ADR callout" → "Standing-Decision
   callout (… citing the entry by its `YYYY-MM-DD HH:MM — subject` header)".
 - **`codebase-design/DESIGN-IT-TWICE.md`** — brief: "CONTEXT.md vocabulary" → "the repo's
-  own domain vocabulary (from its `CLAUDE.md`, subsystem READMEs, and any active `_specs/`
-  bundle)".
+  own domain vocabulary (from its `GLOSSARY.md` if present, `CLAUDE.md`, subsystem READMEs,
+  and any active `_specs/` bundle)".
 - **`diagnosing-bugs/SKILL.md`** — explore step: `CONTEXT.md` → `GLOSSARY.md`, "check ADRs"
   → "check the `project_log.md` Standing Decisions index".
 - **`handoff/SKILL.md`** — "don't duplicate … ADRs …" → "… `project_log.md`/spec-log

@@ -42,3 +42,44 @@ every cycle. Demote-on-first-recurrence (one nudge) — superseded by the owner'
 field (`deferred_simplifications`).
 **Why:** minimises new state and regression risk in a shipped tool; a recurring simplification that
 self-demotes also reduces false stuck-interrupts (a free win on the existing Step 6 alarm).
+
+---
+
+## 2026-06-30 — Deviation: ledger entry carries `finding_text` beyond the planned schema
+
+**Decision:** `deferred_simplifications` entries are `{fingerprint, first_seen_pass, age, finding_text}`
+— `finding_text` added to the plan's `{fingerprint, first_seen_pass, age}`.
+**Why:** the max_iter terminal (Step 2) files outstanding simplifications as issues with **no live
+review file** to source prose from (the review ran on the prior pass). Persisting `finding_text` in
+the ledger is the only way the terminal can build the issue body. Minimal, additive; does not change
+the lifecycle. Logged per the deviation-from-approved-plan routing in `.claude/rules/03-logging.md`.
+
+---
+
+## 2026-06-30 — Gate evidence: backoff lifecycle hand-trace (Task 3 verification)
+
+**Decision:** Task 3's lifecycle verified by hand-trace (no automated gate exists for prompt logic).
+`max_iterations = 5` throughout; S1 = a `[simplification]`, R = a `[regression]`.
+
+- **T1 — schedule (S1 deferred, no regression).** P1: Step 5 `hard_blocker_count=0`,
+  `simplifications_this_pass=[S1]`; Step 6 skipped (empty hard text); Step 6.5 first-sees S1 →
+  age 0 → Blocker → `effective_blocker_count=1` → Step 8 → design-pin → one interrupt → user defers →
+  no edit → Step 9.0 skips commit → Step 10 persists ledger `[{S1,age0}]`. **S1 = Blocker@age0.**
+  P2: fresh review re-raises S1; Step 6 skipped (S1 is NOT in hard text → no false stuck though it
+  recurred); Step 6.5 matches → age 1 → Important; `age0_simplifications=[]` →
+  `effective_blocker_count=0` → Step 7 merge-ready → Step 7.5 folds S1 from the ledger into
+  `issues_to_file` → filed (P2-backlog), ledger cleared. **S1 = Important@age1 → issue@terminal.**
+- **T2 — age reaches 2.** If hard regressions keep `effective_blocker_count>0` through P1–P3
+  (without >50 % hard-text overlap, so no stuck), S1 reads Blocker@age0(P1) → Important@age1(P2) →
+  Important@age2(P3); the first terminal (merge-ready or max_iter) files it. **Covers age 1–2.**
+- **T3 — max_iter discharge.** Loop never clears its regressions, reaches pass 6 > max ⇒ Step 2:
+  `len(deferred_simplifications)≥1` → deferred-simplification filing routine files each as an issue
+  (consent asked once if never captured) → cleanup → exit. **No simplification dropped at the bound.**
+- **T4 — regressions DO trip stuck (contrast).** An unfixed R recurring with >50 % `hard_blocker_text`
+  overlap fires Step 6's stuck-detector (R is in hard text); a recurring S1 never does. Confirms the
+  self-demote / no-false-stuck property.
+- **T5 — clean PR converges.** S1 = a trivial extraction (mechanical): Step 8 auto-fixes it P1 → P2
+  fresh review drops it → ledger reconcile removes it (resolved, **no** issue) → `effective=0` →
+  merge-ready at 0 hard Blockers within `max_iterations`.
+
+**Refs:** PROMPT.md Steps 2 / 5 / 6 / 6.5 / 7.5 / 8 / 9 / 10; scripts/setup.sh seed.

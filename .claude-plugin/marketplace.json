@@ -13,8 +13,8 @@
     {
       "name": "pr-review-loop",
       "source": "./plugins/pr-review-loop",
-      "description": "Drive a PR through review-remediate cycles until a 0-Blockers merge bar is met.",
-      "version": "1.0.1"
+      "description": "Drive a PR through review-remediate cycles until a 0-Blockers merge bar is met; on code PRs, apply a code-quality rubric (structural regressions hard-block; missed simplifications back off Blocker -> Important -> follow-up issue).",
+      "version": "1.1.0"
     },
     {
       "name": "logging-automation",

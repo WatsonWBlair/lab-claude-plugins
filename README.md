@@ -6,7 +6,7 @@ A [Claude Code](https://code.claude.com) plugin marketplace from the CAMELS Rese
 
 | Plugin | What it does |
 |---|---|
-| **pr-review-loop** | Drives a GitHub PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then runs a close-out sub-flow (resolve Important findings, fold easy Suggestions, file issues for the rest, post one consolidated PR comment). |
+| **pr-review-loop** | Drives a GitHub PR through alternating review and remediation passes until an outsider review returns 0 Blockers, then runs a close-out sub-flow (resolve Important findings, fold easy Suggestions, file issues for the rest, post one consolidated PR comment). On code-touching PRs it applies a **code-quality rubric**: structural regressions hard-block; missed simplifications follow a backoff schedule (Blocker → Important → follow-up issue) so the bar stays reachable. |
 | **logging-automation** | Detects loggable moments and drafts correctly-routed, correctly-formatted audit-trail log entries by *applying* `lab-os .claude/rules/03-logging.md` (source of truth) — it does not redefine the rules. Load-bearing-decision writes are gated behind human approval. **First designated consumer: mission-control Phase 6** (`log:` capture flow) — MC Phase 6 is designed to consume this skill's routing, format, and gate logic; MC retains its own approve-UI, `log_entries` store, file-append, and divergence tripwire. Consumer contract: `plugins/logging-automation/skills/logging-automation/reference/consumer-contract.md`. |
 | **prompt-optimization** | Hardens or restructures a prompt in two modes — **augment** (adds context-appropriate hardening clauses from a curatable library while preserving your original wording) or **rewrite** (produces a full AI-ready restructure with an explicit goal, success criterion, scope boundary, and output contract). Available as both a slash command (`/optimize-prompt`) and an auto-triggering skill. No loop-framework dependency. |
 | **engineering-discipline** | Eight engineering skills adapted from [Matt Pocock's "Skills For Real Engineers"](https://github.com/mattpocock/skills) (MIT). **grill-me**/**grilling** run a relentless one-question-at-a-time alignment interview; **grill-with-docs**/**domain-modeling** run the same interview while maintaining the repo's `GLOSSARY.md` and logging load-bearing decisions; **codebase-design** carries the deep-module vocabulary and **improve-codebase-architecture** scans for deepening opportunities and renders them as a visual HTML report; **diagnosing-bugs** is a feedback-loop-first debugging discipline; **handoff** compacts a conversation for a fresh agent. Rewired to lab-os conventions throughout — decisions route through `/log` (project_log Standing Decisions / spec-log) instead of `docs/adr`, and the domain glossary is `GLOSSARY.md` (first-read, pointed from `CLAUDE.md`) instead of `CONTEXT.md`. Attribution and the full rewire map: `plugins/engineering-discipline/ATTRIBUTION.md`. |
@@ -49,6 +49,15 @@ Run it from inside a git repo with an open PR you have push access to. The loop:
 4. On reaching 0 Blockers, runs the close-out sub-flow and posts a consolidated final comment **under your `gh` identity** (with consent, asked once per loop).
 
 Cancel mid-loop with `/cancel-ralph`. See the plugin's `SKILL.md` for the full interrupt model and merge-bar semantics.
+
+#### Code-quality rubric (code-touching PRs)
+
+On PRs that change code, each review pass also applies a structural code-quality rubric (`reference/code-quality-rubric.md`, adapted from Cursor's MIT-licensed `thermo-nuclear-code-quality-review`). The subagent tags every structural finding:
+
+- **`[regression]`** — a structural regression this PR introduces (a file crossing 1000 lines in-diff, a new ad-hoc branch wedged into an unrelated flow, or feature logic leaked into a shared/canonical path). These are **hard Blockers** and gate the merge bar every cycle until fixed.
+- **`[simplification]`** — a missed simplification the PR adds ("code-judo" smells: thin wrappers, cast/optionality churn, near-duplicates of a canonical helper). These follow a **backoff schedule** — a Blocker the first cycle (age 0), Important on the next one or two (age 1–2), then a follow-up GitHub issue at age ≥ 3 or any terminal exit. The backoff gives each missed simplification one cycle of real push while keeping the 0-Blocker bar reachable; the issue-fallback guarantees nothing is silently dropped.
+
+Only findings the PR itself introduces are in scope (diff-scoped). Doc/plan-only PRs are unchanged — the rubric is not referenced.
 
 ### logging-automation
 

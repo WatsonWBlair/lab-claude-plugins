@@ -126,6 +126,7 @@ cat > "$STATE_FILE" <<JSON
   "bar": "$BAR",
   "blocker_history": [],
   "last_blocker_text": "",
+  "deferred_simplifications": [],
   "status": "running",
   "completion_reason": null,
   "consent_to_post_pr_comments": null

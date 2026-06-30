@@ -61,8 +61,9 @@ This is a lab-os conventions change, logged at the project altitude.
 - **`grill-with-docs/SKILL.md`** — description updated (glossary/decisions wording); body
   verbatim.
 - **`improve-codebase-architecture/SKILL.md`** — rewritten: intro, Step 1, Step 2
-  ("Standing-Decision conflicts"), Step 3 (offers `/log` instead of an ADR; `/domain-modeling`
-  glossary side-effects now target `GLOSSARY.md`/`CLAUDE.md`).
+  ("Standing-Decision conflicts"), Step 3 (offers `/log` instead of an ADR; new domain terms
+  route to `GLOSSARY.md` with the lazy-create `CLAUDE.md` pointer, matching `/domain-modeling`).
+  Domain-vocabulary read lists across the intro and Steps 1–2 include `GLOSSARY.md` (if present).
 - **`improve-codebase-architecture/HTML-REPORT.md`** — "ADR callout" → "Standing-Decision
   callout (… citing the entry by its `YYYY-MM-DD HH:MM — subject` header)".
 - **`codebase-design/DESIGN-IT-TWICE.md`** — brief: "CONTEXT.md vocabulary" → "the repo's

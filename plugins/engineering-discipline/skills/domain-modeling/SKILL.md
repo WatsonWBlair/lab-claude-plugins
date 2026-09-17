@@ -12,7 +12,7 @@ Actively build and sharpen the project's domain model as you design. This is the
 Two surfaces, both governed by lab-os rules — this skill does not invent a parallel doc system:
 
 - **Glossary → `GLOSSARY.md`** at the repo root: the ubiquitous-language glossary, a first-read AI-tier doc (`.claude/rules/04-docs.md`). The repo's `CLAUDE.md` carries a one-line pointer to it so it loads during coding. Format: [GLOSSARY-FORMAT.md](./GLOSSARY-FORMAT.md).
-- **Load-bearing decisions → `/log`**: do **not** create a `docs/adr/` tree. When a decision is worth recording, invoke the `/log` skill, which routes it to the `project_log.md` **Standing Decisions** index (durable, repo-level) or the active spec-log (`_specs/<repo>/<DATE>-<handle>/log.md`, bundle-scoped) and applies the `03-logging.md` entry format. When to offer: [DECISION-FORMAT.md](./DECISION-FORMAT.md).
+- **Load-bearing decisions → the decision register**: do **not** create a `docs/adr/` tree. When a decision is worth recording, write it into the scope's main-bundle decision register (`_specs/<scope>/main/spec.md` — the ADR-equivalent surface, "what is still true," read first), or the in-flight bundle's `spec.md` if the decision is scoped there. When to offer, and the entry format: [DECISION-FORMAT.md](./DECISION-FORMAT.md).
 
 Create files lazily — only when you have something to write. If no `GLOSSARY.md` exists, create one when the first term is resolved, and add the one-line pointer to `CLAUDE.md` at the same time. For multi-subsystem repos, see [GLOSSARY-FORMAT.md](./GLOSSARY-FORMAT.md).
 
@@ -40,12 +40,12 @@ When a term is resolved, update `GLOSSARY.md` right there. Don't batch these up 
 
 `GLOSSARY.md` should be totally devoid of implementation details. Do not treat it as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
-### Offer to log decisions sparingly
+### Offer to record decisions sparingly
 
-Only offer to record a load-bearing decision (via `/log`) when all three are true:
+Only offer to record a load-bearing decision when all three are true:
 
 1. **Hard to reverse** — the cost of changing your mind later is meaningful
 2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
 3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
 
-This mirrors `03-logging.md` trigger #1 (load-bearing decision). If any of the three is missing, skip it. See [DECISION-FORMAT.md](./DECISION-FORMAT.md).
+If any of the three is missing, skip it. See [DECISION-FORMAT.md](./DECISION-FORMAT.md).

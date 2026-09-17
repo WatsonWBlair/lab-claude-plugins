@@ -1,6 +1,6 @@
 # GLOSSARY.md Format
 
-`GLOSSARY.md` is the repo's ubiquitous-language glossary — a first-read AI-tier doc (`.claude/rules/04-docs.md`). The repo's `CLAUDE.md` carries a one-line pointer to it so it loads during coding. It is a glossary and nothing else: no implementation details, no decisions (those go through `/log` to `project_log.md`).
+`GLOSSARY.md` is the repo's ubiquitous-language glossary — a first-read AI-tier doc (`.claude/rules/04-docs.md`). The repo's `CLAUDE.md` carries a one-line pointer to it so it loads during coding. It is a glossary and nothing else: no implementation details, no decisions (those go in the decision register — see [DECISION-FORMAT.md](./DECISION-FORMAT.md)).
 
 ## Structure
 

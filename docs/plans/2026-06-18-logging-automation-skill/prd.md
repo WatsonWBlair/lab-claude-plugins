@@ -11,7 +11,9 @@
 > skill **automates** those rules; it never redefines them. Where the two ever
 > disagree, `03-logging.md` wins and this skill is the bug.
 
-**Status:** draft
+**Status:** superseded — the `logging-automation` plugin this PRD designed was deleted whole
+(T5.1, `docs: remove the logging-automation plugin`); kept as record, not implementable as
+written.
 **Date:** 2026-06-18 · **Repo:** `lab-claude-plugins` (new plugin: `logging-automation`)
 **Packet:** P9 (Open-Threads consolidation) · **Route:** lab-claude-plugins marketplace
 

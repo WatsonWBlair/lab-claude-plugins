@@ -11,13 +11,13 @@ Surface architectural friction and propose **deepening opportunities** — refac
 This command is _informed_ by the repo's existing decisions and built on a shared design vocabulary:
 
 - Run the `/codebase-design` skill for the architecture vocabulary (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) and its principles (the deletion test, "the interface is the test surface", "one adapter = hypothetical seam, two = real"). Use these terms exactly in every suggestion — don't drift into "component," "service," "API," or "boundary."
-- The repo's own domain vocabulary (its `GLOSSARY.md` if present, `CLAUDE.md`, subsystem READMEs, and any in-flight `_specs/` bundle for the area) gives names to good seams. The **Standing Decisions** index at the top of `project_log.md` records architecture decisions this command must not re-litigate (per `.claude/rules/03-logging.md`) — it is the "what is still true" surface, read first.
+- The repo's own domain vocabulary (its `GLOSSARY.md` if present, `CLAUDE.md`, subsystem READMEs, and any in-flight `_specs/` bundle for the area) gives names to good seams. The main-bundle decision register (`_specs/<scope>/main/spec.md`) records architecture decisions this command must not re-litigate — it is the "what is still true" surface, read first.
 
 ## Process
 
 ### 1. Explore
 
-Read the repo's domain vocabulary first — its `GLOSSARY.md` (if present), `CLAUDE.md`, subsystem READMEs, and any active `_specs/<repo>/<DATE>-<handle>/` bundle for the area you're touching. Then read the **Standing Decisions** index in `project_log.md` so you don't re-suggest a decision already recorded there (and check the active spec-log's decisions if the area is mid-flight).
+Read the repo's domain vocabulary first — its `GLOSSARY.md` (if present), `CLAUDE.md`, subsystem READMEs, and any active `_specs/<repo>/<DATE>-<handle>/` bundle for the area you're touching. Then read the main-bundle decision register (`_specs/<scope>/main/spec.md`) so you don't re-suggest a decision already recorded there (and check the active bundle's `spec.md` if the area is mid-flight).
 
 Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
 
@@ -48,7 +48,7 @@ End the report with a **Top recommendation** section: which candidate you'd tack
 
 **Use the repo's own vocabulary for the domain** (drawn from `GLOSSARY.md` if present, `CLAUDE.md`, subsystem READMEs, and `_specs/`), and the `/codebase-design` vocabulary for the architecture. If the repo calls it "Order intake," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
 
-**Standing-Decision conflicts**: if a candidate contradicts a recorded Standing Decision, only surface it when the friction is real enough to warrant reopening that decision. Mark it clearly in the card (e.g. a warning callout: _"contradicts the 2026-06-30 14:00 'single intake seam' decision in project_log — but worth reopening because…"_), citing the entry by its `YYYY-MM-DD HH:MM — subject` header. Don't list every theoretical refactor a past decision forbids.
+**Decision-register conflicts**: if a candidate contradicts a recorded decision, only surface it when the friction is real enough to warrant reopening that decision. Mark it clearly in the card (e.g. a warning callout: _"contradicts §<id> 'single intake seam' in the decision register — but worth reopening because…"_), citing the entry by its `§<id>` header. Don't list every theoretical refactor a past decision forbids.
 
 See [HTML-REPORT.md](HTML-REPORT.md) for the full HTML scaffold, diagram patterns, and styling guidance.
 
@@ -61,5 +61,5 @@ Once the user picks a candidate, run the `/grilling` skill to walk the design tr
 Side effects happen inline as decisions crystallize:
 
 - **Naming a deepened module after a concept the repo hasn't named yet?** Record the new term in `GLOSSARY.md` (the canonical domain-vocabulary surface) so future sessions name it consistently — lazily creating `GLOSSARY.md` with a one-line `CLAUDE.md` pointer if it doesn't exist yet, per the `/domain-modeling` convention. Otherwise just use it consistently for the rest of this session.
-- **User rejects the candidate with a load-bearing reason?** Offer to record it as a **load-bearing decision** so future architecture reviews don't re-suggest it — invoke the `/log` skill, which classifies and routes the entry per `.claude/rules/03-logging.md`: a durable, repo-level architecture decision lands in the `project_log.md` **Standing Decisions** index (the ADR-equivalent surface); a decision scoped to an in-flight planning bundle lands in that bundle's spec-log (`_specs/<repo>/<DATE>-<handle>/log.md`). Frame the offer as: _"Want me to log this as a load-bearing decision so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing — skip ephemeral reasons ("not worth it right now") and self-evident ones.
+- **User rejects the candidate with a load-bearing reason?** Offer to record it as a **load-bearing decision** so future architecture reviews don't re-suggest it, per [DECISION-FORMAT.md](../domain-modeling/DECISION-FORMAT.md): a durable, repo-level architecture decision lands in the main-bundle decision register (`_specs/<scope>/main/spec.md` — the ADR-equivalent surface); a decision scoped to an in-flight planning bundle lands in that bundle's `spec.md`. Frame the offer as: _"Want me to record this as a load-bearing decision so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing — skip ephemeral reasons ("not worth it right now") and self-evident ones.
 - **Want to explore alternative interfaces for the deepened module?** Run the `/codebase-design` skill and use its design-it-twice parallel sub-agent pattern.

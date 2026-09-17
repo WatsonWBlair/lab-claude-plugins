@@ -50,7 +50,7 @@ Each candidate is one `<article>`:
 - **Problem** — one sentence. What hurts.
 - **Solution** — one sentence. What changes.
 - **Wins** — bullets, ≤6 words each. e.g. "Tests hit one interface", "Pricing logic stops leaking", "Delete 4 shallow wrappers".
-- **Standing-Decision callout** (if applicable) — one line in an amber-tinted box, citing the entry by its `YYYY-MM-DD HH:MM — subject` header.
+- **Decision-register callout** (if applicable) — one line in an amber-tinted box, citing the entry by its `§<id>` header.
 
 No paragraphs of explanation. If the diagram needs a paragraph to be understood, redraw the diagram.
 

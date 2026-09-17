@@ -1,15 +1,15 @@
 # Recording a load-bearing decision
 
-lab-os has no `docs/adr/` tree. Architecture and domain decisions are recorded through the **`/log`** skill, which classifies and routes the entry per `.claude/rules/03-logging.md`:
+lab-os has no `docs/adr/` tree. Architecture and domain decisions are recorded per `.claude/rules/08-bundles.md` §Bundle lifecycle & the main bundle (the register):
 
-- **Durable, repo-level decision** → `project_log.md` **Standing Decisions** index (the ADR-equivalent surface — "what is still true," read first).
-- **Scoped to an in-flight planning bundle** → that bundle's spec-log (`_specs/<repo>/<DATE>-<handle>/log.md`).
+- **Durable, repo-level decision** → the scope's **main-bundle decision register** (`_specs/<scope>/main/spec.md` — the ADR-equivalent surface, "what is still true," read first).
+- **Scoped to an in-flight planning bundle** → that bundle's `spec.md`, the design authority while it is open; it reaches the register at the fold if it outlives the slice.
 
-`/log` (the `logging-automation` skill) owns the entry format — Decision / Why / Alternatives / Refs — so you don't hand-format anything. Your job is to recognise *when* a decision is worth offering, and to invoke `/log` with what was decided and why.
+The register's shape owns the entry format: a `## Decision summary` row (`# | Question | Resolution | Status`) plus a `### §<id>: <resolution, stated current-state>` section carrying **Why.** (rationale, alternatives rejected), **Contract impact:** (what this binds), and **Landed:** `PR #<n>`. A reversal rewrites the section to the current answer and names what it replaced — there is no frozen row to annotate. Your job is to recognise *when* a decision is worth offering, and to write it in that form with what was decided and why.
 
 ## When to offer
 
-All three must be true (this mirrors `03-logging.md` trigger #1 — load-bearing decision):
+All three must be true:
 
 1. **Hard to reverse** — the cost of changing your mind later is meaningful
 2. **Surprising without context** — a future reader will look at the code and wonder "why on earth did they do it this way?"
@@ -26,3 +26,15 @@ If a decision is easy to reverse, skip it — you'll just reverse it. If it's no
 - **Deliberate deviations from the obvious path.** "We're using manual SQL instead of an ORM because X." Anything where a reasonable reader would assume the opposite. These stop the next engineer from "fixing" something that was deliberate.
 - **Constraints not visible in the code.** "We can't use AWS because of compliance requirements." "Response times must be under 200ms because of the partner API contract."
 - **Rejected alternatives when the rejection is non-obvious.** If you considered GraphQL and picked REST for subtle reasons, record it — otherwise someone will suggest GraphQL again in six months.
+
+## Writing the section
+
+```md
+### §<id>: <resolution, stated current-state>
+<the resolution — what is true now>
+**Why.** <rationale, alternatives rejected>
+**Contract impact:** <what this binds>
+**Landed:** PR #<n>
+```
+
+Add the matching row to the `## Decision summary` table (`| <id> | <question> | <resolution one-liner> | **DECIDED** (§<id>) |`). `<id>` is assigned at the point of recording and is never reused.

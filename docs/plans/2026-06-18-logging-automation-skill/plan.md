@@ -1,5 +1,9 @@
 # Logging Automation Skill — implementation plan
 
+**Status:** superseded — the `logging-automation` plugin this plan shipped was deleted whole
+(T5.1, `docs: remove the logging-automation plugin`); kept as record, not implementable as
+written.
+
 **Goal:** Ship a portable `logging-automation` plugin in the `lab-claude-plugins`
 marketplace that detects loggable events per `03-logging.md`, routes them to the correct
 altitude and format, auto-drafts the status/event tier, and gates load-bearing-decision
